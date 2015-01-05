@@ -44,3 +44,6 @@ htmlcov/
 include/
 lib/
 /bootstrap.py
+
+# From Sublime Text
+.ropeproject

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+setup file for python project.
+"""
+
 from setuptools import setup, find_packages
 
 SRC_DIR = 'src'
