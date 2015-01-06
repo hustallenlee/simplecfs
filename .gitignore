@@ -45,5 +45,5 @@ include/
 lib/
 /bootstrap.py
 
-# From Sublime Text
+# From python-mode
 .ropeproject
