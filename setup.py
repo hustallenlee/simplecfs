@@ -7,7 +7,7 @@ setup file for python project.
 
 from setuptools import setup, find_packages
 
-SRC_DIR = 'src'
+SRC_DIR = 'simplecfs'
 VERSION = '0.1'
 README = ''
 
