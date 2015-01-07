@@ -1,0 +1,21 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+start the dataserver as a service
+"""
+import argparse
+
+
+def main():
+    """run the dataserver main function"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--config',
+                        metavar='CONFIG_FILE',
+                        help='dataserver config file',
+                        default='./conf/ds.config')
+    args = parser.parse_args()
+    config_file = args.config
+    print config_file
+
+if __name__ == '__main__':
+    main()
