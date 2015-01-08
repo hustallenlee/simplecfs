@@ -4,18 +4,30 @@
 start the dataserver as a service
 """
 import argparse
+import ConfigParser as configparser
 
 
 def main():
     """run the dataserver main function"""
+    # handle command line argument
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config',
                         metavar='CONFIG_FILE',
                         help='dataserver config file',
-                        default='./conf/ds.config')
+                        default='./conf/ds.cfg')
     args = parser.parse_args()
     config_file = args.config
-    print config_file
+
+    # get config options
+    config = configparser.ConfigParser()
+    config.read(config_file)
+    for sec in config.sections():
+        print '[%s]' % sec
+        for opt in config.options(sec):
+            print '%s : %s' % (opt, config.get(sec, opt))
+        print ''
+
+    # init logging
 
 if __name__ == '__main__':
     main()
