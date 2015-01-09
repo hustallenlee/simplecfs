@@ -5,6 +5,8 @@ start the dataserver as a service
 """
 import argparse
 import ConfigParser as configparser
+import logging
+import logging.handlers
 
 
 def main():
@@ -21,13 +23,23 @@ def main():
     # get config options
     config = configparser.ConfigParser()
     config.read(config_file)
-    for sec in config.sections():
-        print '[%s]' % sec
-        for opt in config.options(sec):
-            print '%s : %s' % (opt, config.get(sec, opt))
-        print ''
 
     # init logging
+    logger = logging.getLogger()  # get the 'root' logger
+    level = getattr(logging, config.get('log', 'log_level'))
+    logger.setLevel(level)
+    log_name = config.get('log', 'log_name')
+    log_max_bytes = config.getint('log', 'log_max_bytes')
+    log_file_num = config.getint('log', 'log_file_num')
+    handler = logging.handlers.RotatingFileHandler(log_name,
+                                                   maxBytes=log_max_bytes,
+                                                   backupCount=log_file_num)
+    log_format = logging.Formatter('%(levelname)-8s[%(asctime)s.%(msecs)d]'
+                                   '<%(module)s> %(funcName)s:%(lineno)d:'
+                                   ' %(message)s',
+                                   datefmt='%Y-%m-%d %H:%M:%S')
+    handler.setFormatter(log_format)
+    logger.addHandler(handler)
 
 if __name__ == '__main__':
     main()
