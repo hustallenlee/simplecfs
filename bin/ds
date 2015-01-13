@@ -16,7 +16,7 @@ def main():
     parser.add_argument('-c', '--config',
                         metavar='CONFIG_FILE',
                         help='dataserver config file',
-                        default='./conf/ds.cfg')
+                        default='../conf/ds.cfg')
     args = parser.parse_args()
     config_file = args.config
 
