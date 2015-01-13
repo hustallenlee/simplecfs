@@ -35,7 +35,7 @@ class DSStore(object):
         """
         try:
             os.remove(self.store_dir+chunk_id)
-        except IOError:
+        except OSError:
             logging.exception("remove file error")
             return RET_FAILURE
         return RET_SUCCESS
@@ -61,7 +61,7 @@ class DSStore(object):
         """
         chunk_size = self._file_size(chunk_id)
         if chunk_size < 0:
-            return (RET_FAILURE, '')
+            return (RET_FAILURE, [])
         block_size = chunk_size / total_blocks
         fin = open(self.store_dir+chunk_id, 'rb')
         data = []
