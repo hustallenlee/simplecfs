@@ -52,17 +52,17 @@ class DSStore(object):
             ret['state'] = CHUNK_MISSING
         return ret
 
-    def read_chunk(self, chunk_id, total_blocks, block_list):
+    def read_chunk(self, chunk_id, block_count, block_list):
         """read several blocks of chunk
         @chunk_ID: the chunk ID, namely the chunk name
-        @total_blocks: the total blocks of one chunk
+        @block_count: the total blocks of one chunk
         @block_list: list of block sequence in the chunk, start of 0
         return: (state, data_list)
         """
         chunk_size = self._file_size(chunk_id)
         if chunk_size < 0:
             return (RET_FAILURE, [])
-        block_size = chunk_size / total_blocks
+        block_size = chunk_size / block_count
         fin = open(self.store_dir+chunk_id, 'rb')
         data = []
         for block in block_list:
