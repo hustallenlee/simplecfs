@@ -62,7 +62,11 @@ class DSStore(object):
         chunk_size = self._file_size(chunk_id)
         if chunk_size < 0:
             return (RET_FAILURE, [])
+
+        if block_count <= 0:
+            return (RET_FAILURE, [])
         block_size = chunk_size / block_count
+
         fin = open(self.store_dir+chunk_id, 'rb')
         data = []
         for block in block_list:

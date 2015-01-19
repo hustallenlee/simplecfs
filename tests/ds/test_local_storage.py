@@ -77,6 +77,9 @@ class TestDSStore(object):
         eq_(ret[0], RET_FAILURE)
         eq_(ret[1], [])
 
+        ret = ds1.read_chunk('test_chunk', 0, [0, 1])
+        eq_(ret[0], RET_FAILURE)
+
     def test_file_size(self):
         ds1 = DSStore()
         ret = ds1._file_size('test_chunk')
