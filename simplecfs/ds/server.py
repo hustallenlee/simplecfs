@@ -26,12 +26,12 @@ class DSServer(object):
         while True:
             # pass through every non-eof line
             line = filed.readline()
-            logging.info("recv: %s", line)
+            logging.info('recv: %s', line)
             if not line:
                 break
             filed.write(line)
             filed.flush()
-        logging.info("client disconnected")
+        logging.info('client disconnected')
 
     def start(self):
         """
@@ -40,7 +40,7 @@ class DSServer(object):
         while True:
             try:
                 sock, address = self._server.accept()
-                logging.info("accepted %s:%s", address[0], address[1])
+                logging.info('accepted %s:%s', address[0], address[1])
                 self._pool.spawn_n(self._handle_conncetion, sock.makefile('rw'))
             except (SystemExit, KeyboardInterrupt):
                 break
