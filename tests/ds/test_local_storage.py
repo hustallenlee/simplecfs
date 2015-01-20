@@ -2,11 +2,11 @@
 """
 unit test for local_storage module
 """
-from nose.tools import eq_, assert_less
+from nose.tools import eq_
 
 from simplecfs.ds.local_storage import DSStore
-from simplecfs.common.parameters import (RET_SUCCESS, RET_FAILURE,
-                                         CHUNK_OK, CHUNK_MISSING)
+from simplecfs.common.parameters import RET_SUCCESS, RET_FAILURE,\
+    CHUNK_OK, CHUNK_MISSING
 
 
 class TestDSStore(object):
@@ -61,7 +61,8 @@ class TestDSStore(object):
 
         ret = ds1.info_chunk('nosuchchunk')
         eq_(ret['state'], CHUNK_MISSING)
-        assert_less(ret['size'], 0)
+        # assert_less(ret['size'], 0)
+        assert ret['size'] < 0
 
     def test_read_chunk(self):
         ds1 = DSStore()
@@ -86,4 +87,4 @@ class TestDSStore(object):
         eq_(ret, 21)
 
         ret = ds1._file_size('nosuchchunk')
-        assert_less(ret, 0)
+        assert ret < 0

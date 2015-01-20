@@ -6,8 +6,8 @@ handle local storage: write, remove, read and info of data chunk.
 import logging
 import os
 
-from simplecfs.common.parameters import (RET_SUCCESS, RET_FAILURE,
-                                         CHUNK_OK, CHUNK_MISSING)
+from simplecfs.common.parameters import RET_SUCCESS, RET_FAILURE,\
+    CHUNK_OK, CHUNK_MISSING
 
 
 class DSStore(object):
