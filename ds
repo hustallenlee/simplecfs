@@ -8,6 +8,8 @@ import ConfigParser as configparser
 import logging
 import logging.handlers
 
+from simplecfs.ds.server import DSServer
+
 
 def main():
     """run the dataserver main function"""
@@ -16,7 +18,7 @@ def main():
     parser.add_argument('-c', '--config',
                         metavar='CONFIG_FILE',
                         help='dataserver config file',
-                        default='../conf/ds.cfg')
+                        default='./conf/ds.cfg')
     args = parser.parse_args()
     config_file = args.config
 
@@ -40,6 +42,10 @@ def main():
                                    datefmt='%Y-%m-%d %H:%M:%S')
     handler.setFormatter(log_format)
     logger.addHandler(handler)
+
+    # start server
+    ds_ = DSServer(config)
+    ds_.start()
 
 if __name__ == '__main__':
     main()
