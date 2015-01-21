@@ -4,6 +4,8 @@ define network packet
 """
 import json
 
+from simplecfs.common.parameters import OP_ADD_CHUNK, OP_ADD_CHUNK_REPLY
+
 
 def pack(data):
     """client pack the data to sending packet and return"""
@@ -25,7 +27,7 @@ class AddChunkPacket(object):
         @chunk_length: chunk data length
         """
         self._message = {}
-        self._message['method'] = 'ADD_CHUNK'
+        self._message['method'] = OP_ADD_CHUNK
         self._message['chunk_id'] = chunk_id
         self._message['length'] = chunk_length
 
@@ -41,7 +43,7 @@ class AddChunkReplyPacket(object):
         @state: RET_FAILURE/RET_SUCCESS/etc.
         """
         self._message = {}
-        self._message['method'] = 'ADD_CHUNK_REPLY'
+        self._message['method'] = OP_ADD_CHUNK_REPLY
         self._message['state'] = state
         self._message['info'] = info
 

@@ -7,7 +7,7 @@ import logging
 
 from simplecfs.ds.local_storage import DSStore
 from simplecfs.message.packet import AddChunkReplyPacket
-from simplecfs.common.parameters import RET_SUCCESS
+from simplecfs.common.parameters import RET_SUCCESS, OP_ADD_CHUNK
 from simplecfs.common.network_handler import recv_command,\
     recv_data, send_command
 
@@ -26,7 +26,7 @@ class DSServer(object):
         thread_num = config.getint('threads', 'thread_num')
         self._pool = eventlet.GreenPool(thread_num)
         self._handlers = {
-            'ADD_CHUNK': self._handle_add_chunk,
+            OP_ADD_CHUNK: self._handle_add_chunk,
         }
 
     def _handle_add_chunk(self, filed, args):

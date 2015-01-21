@@ -19,3 +19,7 @@ CHUNK_BREAK = 1002   # when DS is break
 
 # data send and recv frame size
 DATA_FRAME_SIZE = 8192  # 8K
+
+# ==== operations ====
+OP_ADD_CHUNK = 'ADD_CHUNK'
+OP_ADD_CHUNK_REPLY = 'ADD_CHUNK_REPLY'
