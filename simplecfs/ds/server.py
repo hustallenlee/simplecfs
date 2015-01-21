@@ -8,7 +8,7 @@ import logging
 from simplecfs.ds.local_storage import DSStore
 from simplecfs.message.packet import AddChunkReplyPacket
 from simplecfs.common.parameters import RET_SUCCESS, OP_ADD_CHUNK
-from simplecfs.common.network_handler import recv_command,\
+from simplecfs.message.network_handler import recv_command,\
     recv_data, send_command
 
 
