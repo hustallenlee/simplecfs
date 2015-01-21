@@ -16,3 +16,6 @@ CHUNK_OK = 1000
 CHUNK_MISSING = 1001
 CHUNK_BREAK = 1002   # when DS is break
 # CHUNK_DAMAGED = 1003
+
+# data send and recv frame size
+DATA_FRAME_SIZE = 8192  # 8K
