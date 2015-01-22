@@ -7,10 +7,11 @@ import logging
 
 from simplecfs.ds.local_storage import DSStore
 from simplecfs.message.packet import AddChunkReplyPacket,\
-    DeleteChunkReplyPacket
-from simplecfs.common.parameters import OP_ADD_CHUNK, OP_DELETE_CHUNK
+    DeleteChunkReplyPacket, GetChunkReplyPacket
+from simplecfs.common.parameters import OP_ADD_CHUNK, OP_DELETE_CHUNK,\
+    OP_GET_CHUNK
 from simplecfs.message.network_handler import recv_command,\
-    recv_data, send_command
+    recv_data, send_command, send_data
 
 
 class DSServer(object):
@@ -29,6 +30,7 @@ class DSServer(object):
         self._handlers = {
             OP_ADD_CHUNK: self._handle_add_chunk,
             OP_DELETE_CHUNK: self._handle_delete_chunk,
+            OP_GET_CHUNK: self._handle_get_chunk,
         }
 
     def _handle_add_chunk(self, filed, args):
@@ -70,6 +72,33 @@ class DSServer(object):
         msg = reply.get_message()
         logging.info("delete chunk return: %s", msg)
         send_command(filed, msg)
+
+    def _handle_get_chunk(self, filed, args):
+        """handle client -> ds get chunk requst, and response"""
+        logging.info('handle get chunk request')
+
+        chunk_id = args['chunk_id']
+        total = args['total']
+        lists = args['list']
+        logging.info('get chunk: %s', chunk_id)
+
+        # get data from local filesystem
+        store_dir = self._config.get('storage', 'chunk_store_dir')
+        logging.info('get store dir: %s', store_dir)
+        ds_ = DSStore(store_dir)
+        state, data = ds_.read_chunk(chunk_id, total, lists)
+        logging.info('read chunk return: %d', state)
+
+        # reply state
+        reply = GetChunkReplyPacket(state)
+        msg = reply.get_message()
+        logging.info("get chunk return: %s", msg)
+        send_command(filed, msg)
+
+        # reply data
+        if isinstance(data, list):
+            data = b''.join(data)
+        send_data(filed, data)
 
     def _handle_conncetion(self, filed):
         """handle connected socket as a file"""

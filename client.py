@@ -10,13 +10,15 @@ import logging.handlers
 
 import eventlet
 
-from simplecfs.message.packet import AddChunkPacket, DeleteChunkPacket
+from simplecfs.message.packet import AddChunkPacket, DeleteChunkPacket,\
+    GetChunkPacket
 from simplecfs.message.network_handler import send_command, recv_command,\
-    send_data
+    send_data, recv_data
 
 FRAME_SIZE = 1024
 DATA_FILE = './test.bak'
-DATA_LENGTH = 66614904
+DATA_GET_FILE = './test_get.bak'
+DATA_LENGTH = 66600000
 
 
 def get_new_connection(ip_='127.0.0.1', port=7000):
@@ -27,7 +29,7 @@ def test_add_chunk():
     """test function: add_chunk(chunk_id, chunk_length, chunk_data)"""
     chunk_id = 'obj0_chk0'
     length = DATA_LENGTH
-    data = open(DATA_FILE, 'rb').read()
+    data = open(DATA_FILE, 'rb').read(length)
 
     packet = AddChunkPacket(chunk_id, length)
     msg = packet.get_message()
@@ -44,6 +46,7 @@ def test_add_chunk():
     recv = recv_command(sock_fd)
     print recv
     logging.info('recv: %s', recv)
+    sock_fd.close()
 
 
 def test_delete_chunk():
@@ -66,7 +69,28 @@ def test_delete_chunk():
 
 def test_get_chunk():
     """test function: get_chunk(chunk_id, total_blocks, block_list)"""
-    pass
+    chunk_id = 'obj0_chk0'
+    total_blocks = 10
+    block_list = [0, 1, 2, 3, 4]
+
+    packet = GetChunkPacket(chunk_id, total_blocks, block_list)
+    msg = packet.get_message()
+
+    sock = get_new_connection()
+    sock_fd = sock.makefile('rw')
+
+    logging.info('%s', msg)
+    send_command(sock_fd, msg)
+
+    recv = recv_command(sock_fd)
+    print recv
+    logging.info('recv: %s', recv)
+
+    # recieve data
+    data = recv_data(sock_fd)
+    fp = open(DATA_GET_FILE, 'w')
+    fp.write(data)
+    fp.close()
 
 
 def test_check_ds():
@@ -113,7 +137,8 @@ def main():
 
     # start client test
     test_add_chunk()
-    test_delete_chunk()
+    # test_delete_chunk()
+    test_get_chunk()
 
 if __name__ == '__main__':
     main()

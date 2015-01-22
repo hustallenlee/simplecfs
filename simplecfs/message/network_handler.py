@@ -40,7 +40,9 @@ def send_data(socket_fd, data):
     """send data packet over socket_fd"""
     logging.info('sending data packet')
 
-    socket_fd.write('%d\n%s' % (len(data), data))
+    length = len(data)
+    logging.info('send data length: %d', length)
+    socket_fd.write('%d\n%s' % (length, data))
     socket_fd.flush()
 
 
@@ -51,6 +53,7 @@ def recv_data(socket_fd, frame_size=DATA_FRAME_SIZE):
     data = []
     line = socket_fd.readline()
     length = int(line)
+    logging.info('recv data length: %d', length)
     while length > 0:
         recv_ = socket_fd.read(min(length, frame_size))
         data.append(recv_)
