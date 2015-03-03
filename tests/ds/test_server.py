@@ -17,7 +17,6 @@ from simplecfs.message.network_handler import send_command, recv_command,\
     send_data, recv_data
 
 DATA_FILE = './test.bak'
-DATA_GET_FILE = './test_get.bak'
 DATA_LENGTH = 6660000
 DS_CONFIG_FILE = './conf/ds.cfg'
 CLIENT_CONFIG_FILE = './conf/client.cfg'
@@ -97,9 +96,6 @@ def test_ds():
 
     # recieve data
     get_data = recv_data(sock_fd)
-    fp = open(DATA_GET_FILE, 'w')
-    fp.write(get_data)
-    fp.close()
     eq_(get_data, data[:length/2])
 
     # test delete chunk
