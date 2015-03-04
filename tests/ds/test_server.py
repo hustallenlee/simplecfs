@@ -15,6 +15,8 @@ from simplecfs.message.packet import AddChunkPacket, DeleteChunkPacket,\
     GetChunkPacket
 from simplecfs.message.network_handler import send_command, recv_command,\
     send_data, recv_data
+from simplecfs.common.parameters import OP_ADD_CHUNK_REPLY, OP_DELETE_CHUNK_REPLY,\
+    OP_GET_CHUNK_REPLY, RET_SUCCESS
 
 DATA_FILE = './test.bak'
 DATA_LENGTH = 6660000
@@ -70,8 +72,8 @@ def test_ds():
     print recv
     logging.info('recv: %s', recv)
     sock_fd.close()
-    eq_(recv['state'], 0)
-    eq_(recv['method'], u'ADD_CHUNK_REPLY')
+    eq_(recv['state'], RET_SUCCESS)
+    eq_(recv['method'], OP_ADD_CHUNK_REPLY)
 
     # test get chunk
     """test function: get_chunk(chunk_id, total_blocks, block_list)"""
@@ -91,8 +93,8 @@ def test_ds():
     recv = recv_command(sock_fd)
     print recv
     logging.info('recv: %s', recv)
-    eq_(recv['state'], 0)
-    eq_(recv['method'], u'GET_CHUNK_REPLY')
+    eq_(recv['state'], RET_SUCCESS)
+    eq_(recv['method'], OP_GET_CHUNK_REPLY)
 
     # recieve data
     get_data = recv_data(sock_fd)
@@ -114,8 +116,8 @@ def test_ds():
     recv = recv_command(sock_fd)
     print recv
     logging.info('recv: %s', recv)
-    eq_(recv['state'], 0)
-    eq_(recv['method'], u'DELETE_CHUNK_REPLY')
+    eq_(recv['state'], RET_SUCCESS)
+    eq_(recv['method'], OP_DELETE_CHUNK_REPLY)
 
 
 def test_check_ds():
