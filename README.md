@@ -20,6 +20,7 @@ a simple coded file system.
 `python ./ds.py`
 
 ### MDS
+`redis-server # start the redis-server`
 
 ### Client
 `python ./client.py`
