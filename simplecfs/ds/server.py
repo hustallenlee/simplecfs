@@ -27,6 +27,11 @@ class DSServer(object):
 
         thread_num = config.getint('threads', 'thread_num')
         self._pool = eventlet.GreenPool(thread_num)
+
+        store_dir = config.get('storage', 'chunk_store_dir')
+        logging.info('get store dir: %s', store_dir)
+        self._ds = DSStore(store_dir)
+
         self._handlers = {
             OP_ADD_CHUNK: self._handle_add_chunk,
             OP_DELETE_CHUNK: self._handle_delete_chunk,
@@ -42,10 +47,7 @@ class DSServer(object):
         data = recv_data(filed)
 
         # write data to local filesystem
-        store_dir = self._config.get('storage', 'chunk_store_dir')
-        logging.info('get store dir: %s', store_dir)
-        ds_ = DSStore(store_dir)
-        state = ds_.write_chunk(chunk_id, data)
+        state = self._ds.write_chunk(chunk_id, data)
         logging.info('add chunk: %s', chunk_id)
 
         # reply to client
@@ -61,10 +63,7 @@ class DSServer(object):
         chunk_id = args['chunk_id']
 
         # delete local filesystem chunk
-        store_dir = self._config.get('storage', 'chunk_store_dir')
-        logging.info('get store dir: %s', store_dir)
-        ds_ = DSStore(store_dir)
-        state = ds_.remove_chunk(chunk_id)
+        state = self._ds.remove_chunk(chunk_id)
         logging.info('add chunk: %s', chunk_id)
 
         # reply to client
@@ -83,10 +82,7 @@ class DSServer(object):
         logging.info('get chunk: %s', chunk_id)
 
         # get data from local filesystem
-        store_dir = self._config.get('storage', 'chunk_store_dir')
-        logging.info('get store dir: %s', store_dir)
-        ds_ = DSStore(store_dir)
-        state, data = ds_.read_chunk(chunk_id, total, lists)
+        state, data = self._ds.read_chunk(chunk_id, total, lists)
         logging.info('read chunk return: %d', state)
 
         # reply state
