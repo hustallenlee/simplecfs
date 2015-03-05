@@ -6,6 +6,7 @@ unit test for ds
 import ConfigParser as configparser
 import logging
 import logging.handlers
+import os
 
 import eventlet
 from nose.tools import eq_
@@ -18,7 +19,6 @@ from simplecfs.message.network_handler import send_command, recv_command,\
 from simplecfs.common.parameters import OP_ADD_CHUNK_REPLY, OP_DELETE_CHUNK_REPLY,\
     OP_GET_CHUNK_REPLY, RET_SUCCESS
 
-DATA_FILE = './test.bak'
 DATA_LENGTH = 6660000
 DS_CONFIG_FILE = './conf/ds.cfg'
 CLIENT_CONFIG_FILE = './conf/client.cfg'
@@ -54,7 +54,7 @@ def test_ds():
     # test add chunk
     chunk_id = 'obj0_chk0'
     length = DATA_LENGTH
-    data = open(DATA_FILE, 'rb').read(length)
+    data = os.urandom(length)  # generate test data of length size
 
     packet = AddChunkPacket(chunk_id, length)
     msg = packet.get_message()
