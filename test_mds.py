@@ -10,29 +10,25 @@ import logging.handlers
 
 import eventlet
 
-# from simplecfs.message.packet import AddChunkPacket, DeleteChunkPacket,\
-#    GetChunkPacket
-from simplecfs.message.network_handler import send_command, recv_command,\
-    send_data
-
-FRAME_SIZE = 1024
-DATA_FILE = './test.bak'
-DATA_GET_FILE = './test_get.bak'
-DATA_LENGTH = 66600000
+from simplecfs.message.packet import MakeDirPacket
+from simplecfs.message.network_handler import send_command, recv_command
 
 
 def get_new_connection(ip_='127.0.0.1', port=8000):
     return eventlet.connect((ip_, port))
 
 
-def test_add_chunk():
-    """test function: add_chunk(chunk_id, chunk_length, chunk_data)"""
-    chunk_id = 'obj0_chk0'
-    length = DATA_LENGTH
-    data = open(DATA_FILE, 'rb').read(length)
+def test_make_dir():
+    """test function: make_dir(dirname)
+    dirname should be absolute path and end with '/'
+    """
+    dirname = '/testdir/'
 
-    # packet = AddChunkPacket(chunk_id, length)
-    packet = chunk_id  # temp
+    dirname = dirname.strip()
+    if not dirname.endswith('/'):
+        dirname += '/'
+    print 'dirname %s' % dirname
+    packet = MakeDirPacket(dirname)
     msg = packet.get_message()
 
     sock = get_new_connection()
@@ -40,9 +36,6 @@ def test_add_chunk():
 
     logging.info('%s', msg)
     send_command(sock_fd, msg)
-
-    # sending data
-    send_data(sock_fd, data)
 
     recv = recv_command(sock_fd)
     print recv
@@ -83,7 +76,7 @@ def main():
     logger.addHandler(handler)
 
     # start test mds
-    # test_add_chunk()
+    test_make_dir()
 
 if __name__ == '__main__':
     main()

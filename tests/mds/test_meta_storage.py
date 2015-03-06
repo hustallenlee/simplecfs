@@ -75,3 +75,36 @@ class TestMDSStore(object):
 
         ret = mds.exists('nosuchkey')
         eq_(ret, False)
+
+    def test_dir(self):
+        # connet to redis
+        mds = MDSStore(host='127.0.0.1', port=6379, db=0)
+
+        dirname = '/mytestdir/'
+        dirinfo = {
+            'parent_dir': '/',
+            'create_time': '2015-03-04'
+        }
+        ret = mds.mkdir(dirname, dirinfo)
+        eq_(ret, True)
+
+        ret = mds.hasdir(dirname)
+        eq_(ret, True)
+
+        ret = mds.hasdir('/nosuchdir/')
+        eq_(ret, False)
+
+        ret = mds.statdir(dirname)
+        eq_(ret, dirinfo)
+
+        ret = mds.lsdir('/')
+        eq_(dirname in ret, True)
+
+        ret = mds.deldir(dirname)
+        eq_(ret, True)
+
+        ret = mds.hasdir(dirname)
+        eq_(ret, False)
+
+        ret = mds.lsdir(dirname)
+        eq_(dirname in ret, False)

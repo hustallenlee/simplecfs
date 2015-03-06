@@ -6,10 +6,10 @@ from nose.tools import eq_
 
 from simplecfs.common.parameters import OP_ADD_CHUNK, OP_ADD_CHUNK_REPLY,\
     RET_SUCCESS, RET_FAILURE, OP_DELETE_CHUNK, OP_DELETE_CHUNK_REPLY,\
-    OP_GET_CHUNK, OP_GET_CHUNK_REPLY
+    OP_GET_CHUNK, OP_GET_CHUNK_REPLY, OP_MAKE_DIR, OP_MAKE_DIR_REPLY
 from simplecfs.message.packet import pack, unpack, AddChunkPacket,\
     AddChunkReplyPacket, DeleteChunkPacket, DeleteChunkReplyPacket,\
-    GetChunkPacket, GetChunkReplyPacket
+    GetChunkPacket, GetChunkReplyPacket, MakeDirPacket, MakeDirReplyPacket
 
 
 def test_pack_unpack():
@@ -142,5 +142,35 @@ class TestGetChunkRePlyPacket(object):
         packet = DeleteChunkReplyPacket(state, info)
         msg = packet.get_message()
         eq_(OP_DELETE_CHUNK_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+
+class TestMakeDirPacket(object):
+    """the make dir packet"""
+    def test_get_message(self):
+        dirname = '/testdir/'
+        packet = MakeDirPacket(dirname)
+        msg = packet.get_message()
+        eq_(OP_MAKE_DIR, msg['method'])
+        eq_(dirname, msg['dirname'])
+
+
+class TestMakeDirRePlyPacket(object):
+    """the make dir reply packet"""
+    def test_get_message(self):
+        state = RET_SUCCESS
+        info = 'test infomation'
+        packet = MakeDirReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_MAKE_DIR_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+        state = RET_FAILURE
+        info = {'error id': 12, 'error msg': 'test error'}
+        packet = MakeDirReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_MAKE_DIR_REPLY, msg['method'])
         eq_(state, msg['state'])
         eq_(info, msg['info'])

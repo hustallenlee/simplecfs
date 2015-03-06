@@ -5,7 +5,8 @@ define network packet
 import json
 
 from simplecfs.common.parameters import OP_ADD_CHUNK, OP_ADD_CHUNK_REPLY,\
-    OP_DELETE_CHUNK, OP_DELETE_CHUNK_REPLY, OP_GET_CHUNK, OP_GET_CHUNK_REPLY
+    OP_DELETE_CHUNK, OP_DELETE_CHUNK_REPLY, OP_GET_CHUNK, OP_GET_CHUNK_REPLY,\
+    OP_MAKE_DIR, OP_MAKE_DIR_REPLY
 
 
 def pack(data):
@@ -17,6 +18,8 @@ def unpack(packet):
     """ds unpack the data from received packet"""
     return json.loads(packet)
 
+
+# ---- packet between client and ds ----
 
 class AddChunkPacket(object):
     """
@@ -120,4 +123,39 @@ class GetChunkReplyPacket(object):
 
     def get_message(self):
         """return get chunk packet message"""
+        return self._message
+
+
+# ---- packet between client and mds ----
+
+class MakeDirPacket(object):
+    """
+    define the make dir packet
+    """
+    def __init__(self, dirname):
+        """
+        @dirname: dir to be make, absolute path end with '/'
+        """
+        self._message = {}
+        self._message['method'] = OP_MAKE_DIR
+        self._message['dirname'] = dirname
+
+    def get_message(self):
+        """return make dir packet message"""
+        return self._message
+
+
+class MakeDirReplyPacket(object):
+    """make dir reply packet"""
+    def __init__(self, state, info=''):
+        """
+        @state: RET_FAILURE/RET_SUCCESS/etc.
+        """
+        self._message = {}
+        self._message['method'] = OP_MAKE_DIR_REPLY
+        self._message['state'] = state
+        self._message['info'] = info
+
+    def get_message(self):
+        """return make dir reply packet message"""
         return self._message
