@@ -108,3 +108,7 @@ class MDSStore(object):
 
         subs.remove(subfile)
         return self.set(key, subs)
+
+    def hassub(self, dirname):
+        logging.info('meta hassub %s', dirname)
+        return self.exists(sub_key(dirname))

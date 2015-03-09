@@ -8,8 +8,10 @@ import time
 
 from simplecfs.mds.meta_storage import MDSStore
 from simplecfs.message.network_handler import recv_command, send_command
-from simplecfs.common.parameters import RET_SUCCESS, RET_FAILURE, OP_MAKE_DIR
-from simplecfs.message.packet import MakeDirReplyPacket
+from simplecfs.common.parameters import RET_SUCCESS, RET_FAILURE, OP_MAKE_DIR,\
+    OP_REMOVE_DIR, OP_LIST_DIR, OP_STATUS_DIR, OP_VALID_DIR
+from simplecfs.message.packet import MakeDirReplyPacket, RemoveDirReplyPacket,\
+    ListDirReplyPacket, StatusDirReplyPacket, ValidDirReplyPacket
 
 
 class MDSServer(object):
@@ -35,19 +37,20 @@ class MDSServer(object):
 
         self._handlers = {
             OP_MAKE_DIR: self._handle_make_dir,
+            OP_REMOVE_DIR: self._handle_remove_dir,
+            OP_LIST_DIR: self._handle_list_dir,
+            OP_STATUS_DIR: self._handle_status_dir,
+            OP_VALID_DIR: self._handle_valid_dir,
         }
 
     def _isvalid_dirname(self, dirname):
+        """check weather dirname is a valid path name"""
         ret = RET_SUCCESS
         info = 'ok'
 
         if not dirname:  # empty
             ret = RET_FAILURE
             info = 'empty dirname'
-
-        if dirname == '/':
-            ret = RET_FAILURE
-            info = 'dir name is root'
 
         if not dirname.startswith('/'):
             ret = RET_FAILURE
@@ -73,8 +76,8 @@ class MDSServer(object):
         state, info = self._isvalid_dirname(dirname)
 
         # check parent exists
+        parent = ''.join(dirname[:-1].rpartition('/')[0:2])
         if state == RET_SUCCESS:
-            parent = ''.join(dirname[:-1].rpartition('/')[0:2])
             if not self.mds.hasdir(parent):
                 state = RET_FAILURE
                 info = 'mkdir parent no exists: ' + parent
@@ -99,6 +102,127 @@ class MDSServer(object):
         reply = MakeDirReplyPacket(state, info)
         msg = reply.get_message()
         logging.info("make dir return: %s", msg)
+        send_command(filed, msg)
+
+    def _handle_remove_dir(self, filed, args):
+        """handle client -> mds remove dir request, and response"""
+        logging.info('handle remove dir request')
+
+        # get the dirname
+        dirname = args['dirname']
+
+        state = RET_SUCCESS
+        info = 'ok'
+
+        # check dirname valid
+        state, info = self._isvalid_dirname(dirname)
+
+        # check subfiles empty
+        if state == RET_SUCCESS:
+            if self.mds.hassub(dirname):
+                state = RET_FAILURE
+                info = 'has subfiles in %s ' + dirname
+
+        # check dir exists
+        if state == RET_SUCCESS:
+            if not self.mds.hasdir(dirname):
+                state = RET_FAILURE
+                info = 'directory not exists: ' + dirname
+
+        # write to meta db
+        if state == RET_SUCCESS:
+            state = self.mds.deldir(dirname)
+            if state == RET_FAILURE:
+                info = 'rmdir error'
+
+        # reply to client
+        reply = RemoveDirReplyPacket(state, info)
+        msg = reply.get_message()
+        logging.info("remove dir return: %s", msg)
+        send_command(filed, msg)
+
+    def _handle_list_dir(self, filed, args):
+        """handle client -> mds list dir request, and response"""
+        logging.info('handle list dir request')
+
+        # get the dirname
+        dirname = args['dirname']
+
+        state = RET_SUCCESS
+        info = ''
+
+        # check dirname valid
+        state, info = self._isvalid_dirname(dirname)
+
+        # check dir exists
+        if state == RET_SUCCESS:
+            if not self.mds.hasdir(dirname):
+                state = RET_FAILURE
+                info = 'directory not exists: ' + dirname
+
+        # get meta from db
+        if state == RET_SUCCESS:
+            info = self.mds.lsdir(dirname)
+            if not info:  # None
+                info = []
+
+        # reply to client
+        reply = ListDirReplyPacket(state, info)
+        msg = reply.get_message()
+        logging.info("list dir return: %s", msg)
+        send_command(filed, msg)
+
+    def _handle_status_dir(self, filed, args):
+        """handle client -> mds status dir request, and response"""
+        logging.info('handle status dir request')
+
+        # get the dirname
+        dirname = args['dirname']
+
+        state = RET_SUCCESS
+        info = ''
+
+        # check dirname valid
+        state, info = self._isvalid_dirname(dirname)
+
+        # write to meta db
+        if state == RET_SUCCESS:
+            dirinfo = self.mds.statdir(dirname)
+            if not dirinfo:
+                state = RET_FAILURE
+                info = 'no such directory'
+            else:
+                info = dirinfo
+
+        # reply to client
+        reply = StatusDirReplyPacket(state, info)
+        msg = reply.get_message()
+        logging.info("status dir return: %s", msg)
+        send_command(filed, msg)
+
+    def _handle_valid_dir(self, filed, args):
+        """handle client -> mds valid dir request, and response"""
+        logging.info('handle valid dir request')
+
+        # get the dirname
+        dirname = args['dirname']
+
+        state = RET_SUCCESS
+        info = 'ok'
+
+        # check dirname valid
+        state, info = self._isvalid_dirname(dirname)
+
+        # check dir exists
+        if state == RET_SUCCESS:
+            if not self.mds.hasdir(dirname):
+                state = RET_FAILURE
+                info = 'directory not exists: ' + dirname
+
+        # reply to client
+        reply = ValidDirReplyPacket(state, info)
+        msg = reply.get_message()
+        logging.info("valid dir return: %s", msg)
         send_command(filed, msg)
 
     def _handle_conncetion(self, filed):

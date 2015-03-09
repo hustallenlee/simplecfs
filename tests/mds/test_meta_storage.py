@@ -94,6 +94,12 @@ class TestMDSStore(object):
         ret = mds.hasdir('/nosuchdir/')
         eq_(ret, False)
 
+        ret = mds.hassub('/')
+        eq_(ret, True)
+
+        ret = mds.hassub(dirname)
+        eq_(ret, False)
+
         ret = mds.statdir(dirname)
         eq_(ret, dirinfo)
 

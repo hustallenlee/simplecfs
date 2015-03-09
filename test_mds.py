@@ -10,7 +10,8 @@ import logging.handlers
 
 import eventlet
 
-from simplecfs.message.packet import MakeDirPacket
+from simplecfs.message.packet import MakeDirPacket, RemoveDirPacket,\
+    ListDirPacket, StatusDirPacket, ValidDirPacket
 from simplecfs.message.network_handler import send_command, recv_command
 
 
@@ -18,17 +19,112 @@ def get_new_connection(ip_='127.0.0.1', port=8000):
     return eventlet.connect((ip_, port))
 
 
-def test_make_dir():
+def test_make_dir(dirname='/testdir/'):
     """test function: make_dir(dirname)
     dirname should be absolute path and end with '/'
     """
-    dirname = '/testdir/'
 
     dirname = dirname.strip()
     if not dirname.endswith('/'):
         dirname += '/'
-    print 'dirname %s' % dirname
+    print 'make dirname %s' % dirname
     packet = MakeDirPacket(dirname)
+    msg = packet.get_message()
+
+    sock = get_new_connection()
+    sock_fd = sock.makefile('rw')
+
+    logging.info('%s', msg)
+    send_command(sock_fd, msg)
+
+    recv = recv_command(sock_fd)
+    print recv
+    logging.info('recv: %s', recv)
+    sock_fd.close()
+
+
+def test_remove_dir(dirname='/testdir/'):
+    """test function: remove_dir(dirname)
+    dirname should be absolute path and end with '/'
+    """
+
+    dirname = dirname.strip()
+    if not dirname.endswith('/'):
+        dirname += '/'
+    print 'remove dirname %s' % dirname
+    packet = RemoveDirPacket(dirname)
+    msg = packet.get_message()
+
+    sock = get_new_connection()
+    sock_fd = sock.makefile('rw')
+
+    logging.info('%s', msg)
+    send_command(sock_fd, msg)
+
+    recv = recv_command(sock_fd)
+    print recv
+    logging.info('recv: %s', recv)
+    sock_fd.close()
+
+
+def test_list_dir(dirname='/'):
+    """test function: list_dir(dirname)
+    dirname should be absolute path and end with '/'
+    """
+
+    dirname = dirname.strip()
+    if not dirname.endswith('/'):
+        dirname += '/'
+    print 'list dirname %s' % dirname
+    packet = ListDirPacket(dirname)
+    msg = packet.get_message()
+
+    sock = get_new_connection()
+    sock_fd = sock.makefile('rw')
+
+    logging.info('%s', msg)
+    send_command(sock_fd, msg)
+
+    recv = recv_command(sock_fd)
+    print recv
+    logging.info('recv: %s', recv)
+    sock_fd.close()
+
+
+def test_status_dir(dirname='/testdir/'):
+    """test function: status_dir(dirname)
+    dirname should be absolute path and end with '/'
+    """
+
+    dirname = dirname.strip()
+    if not dirname.endswith('/'):
+        dirname += '/'
+    print 'status dirname %s' % dirname
+    packet = StatusDirPacket(dirname)
+    msg = packet.get_message()
+
+    sock = get_new_connection()
+    sock_fd = sock.makefile('rw')
+
+    logging.info('%s', msg)
+    send_command(sock_fd, msg)
+
+    recv = recv_command(sock_fd)
+    print recv
+    logging.info('recv: %s', recv)
+    sock_fd.close()
+
+
+def test_valid_dir(dirname='/testdir/'):
+    """test function: valid_dir(dirname)
+    dirname should be absolute path and end with '/'
+    """
+
+    dirname = dirname.strip()
+    if not dirname.endswith('/'):
+        dirname += '/'
+    print 'valid dirname %s' % dirname
+    packet = ValidDirPacket(dirname)
     msg = packet.get_message()
 
     sock = get_new_connection()
@@ -76,7 +172,20 @@ def main():
     logger.addHandler(handler)
 
     # start test mds
-    test_make_dir()
+    dirname = '/testdir/'
+    test_make_dir(dirname)
+    test_list_dir('/')
+    test_list_dir(dirname)
+    test_status_dir(dirname)
+    test_status_dir('/nosuchdir/')
+    test_valid_dir(dirname)
+    test_valid_dir('/nosuchdir/')
+    test_remove_dir('/nosuchdir/')
+    test_remove_dir(dirname)
+    test_list_dir('/')
+    test_status_dir(dirname)
+    test_valid_dir(dirname)
+
 
 if __name__ == '__main__':
     main()
