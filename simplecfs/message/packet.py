@@ -6,7 +6,9 @@ import json
 
 from simplecfs.common.parameters import OP_ADD_CHUNK, OP_ADD_CHUNK_REPLY,\
     OP_DELETE_CHUNK, OP_DELETE_CHUNK_REPLY, OP_GET_CHUNK, OP_GET_CHUNK_REPLY,\
-    OP_MAKE_DIR, OP_MAKE_DIR_REPLY
+    OP_MAKE_DIR, OP_MAKE_DIR_REPLY, OP_REMOVE_DIR, OP_REMOVE_DIR_REPLY,\
+    OP_LIST_DIR, OP_LIST_DIR_REPLY, OP_STATUS_DIR, OP_STATUS_DIR_REPLY,\
+    OP_VALID_DIR, OP_VALID_DIR_REPLY
 
 
 def pack(data):
@@ -158,4 +160,138 @@ class MakeDirReplyPacket(object):
 
     def get_message(self):
         """return make dir reply packet message"""
+        return self._message
+
+
+class RemoveDirPacket(object):
+    """
+    define the remove dir packet
+    """
+    def __init__(self, dirname):
+        """
+        @dirname: dir to be removed, absolute path end with '/'
+        """
+        self._message = {}
+        self._message['method'] = OP_REMOVE_DIR
+        self._message['dirname'] = dirname
+
+    def get_message(self):
+        """return remove dir packet message"""
+        return self._message
+
+
+class RemoveDirReplyPacket(object):
+    """remove dir reply packet"""
+    def __init__(self, state, info=''):
+        """
+        @state: RET_FAILURE/RET_SUCCESS/etc.
+        """
+        self._message = {}
+        self._message['method'] = OP_REMOVE_DIR_REPLY
+        self._message['state'] = state
+        self._message['info'] = info
+
+    def get_message(self):
+        """return remove dir reply packet message"""
+        return self._message
+
+
+class ListDirPacket(object):
+    """
+    define the list dir packet
+    """
+    def __init__(self, dirname):
+        """
+        @dirname: dir to be listed , absolute path end with '/'
+        """
+        self._message = {}
+        self._message['method'] = OP_LIST_DIR
+        self._message['dirname'] = dirname
+
+    def get_message(self):
+        """return list dir packet message"""
+        return self._message
+
+
+class ListDirReplyPacket(object):
+    """list dir reply packet"""
+    def __init__(self, state, info=''):
+        """
+        @state: RET_FAILURE/RET_SUCCESS/etc.
+        @info: file and directory(endswith '/') list.
+        """
+        self._message = {}
+        self._message['method'] = OP_LIST_DIR_REPLY
+        self._message['state'] = state
+        self._message['info'] = info
+
+    def get_message(self):
+        """return list dir reply packet message"""
+        return self._message
+
+
+class StatusDirPacket(object):
+    """
+    define the status dir packet
+    """
+    def __init__(self, dirname):
+        """
+        @dirname: dir to be status, absolute path end with '/'
+        """
+        self._message = {}
+        self._message['method'] = OP_STATUS_DIR
+        self._message['dirname'] = dirname
+
+    def get_message(self):
+        """return status dir packet message"""
+        return self._message
+
+
+class StatusDirReplyPacket(object):
+    """status dir reply packet"""
+    def __init__(self, state, info=''):
+        """
+        @state: RET_FAILURE/RET_SUCCESS/etc.
+        @info: dir info dict.
+        """
+        self._message = {}
+        self._message['method'] = OP_STATUS_DIR_REPLY
+        self._message['state'] = state
+        self._message['info'] = info
+
+    def get_message(self):
+        """return status dir reply packet message"""
+        return self._message
+
+
+class ValidDirPacket(object):
+    """
+    define the valid dir packet
+    """
+    def __init__(self, dirname):
+        """
+        @dirname: dir to be valid, absolute path end with '/'
+        """
+        self._message = {}
+        self._message['method'] = OP_VALID_DIR
+        self._message['dirname'] = dirname
+
+    def get_message(self):
+        """return valid dir packet message"""
+        return self._message
+
+
+class ValidDirReplyPacket(object):
+    """valid dir reply packet"""
+    def __init__(self, state, info=''):
+        """
+        @state: RET_FAILURE/RET_SUCCESS/etc.
+        """
+        self._message = {}
+        self._message['method'] = OP_VALID_DIR_REPLY
+        self._message['state'] = state
+        self._message['info'] = info
+
+    def get_message(self):
+        """return valid dir reply packet message"""
         return self._message

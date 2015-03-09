@@ -5,11 +5,15 @@ unit test for packet module
 from nose.tools import eq_
 
 from simplecfs.common.parameters import OP_ADD_CHUNK, OP_ADD_CHUNK_REPLY,\
-    RET_SUCCESS, RET_FAILURE, OP_DELETE_CHUNK, OP_DELETE_CHUNK_REPLY,\
-    OP_GET_CHUNK, OP_GET_CHUNK_REPLY, OP_MAKE_DIR, OP_MAKE_DIR_REPLY
+    OP_DELETE_CHUNK, OP_DELETE_CHUNK_REPLY, OP_GET_CHUNK, OP_GET_CHUNK_REPLY,\
+    OP_MAKE_DIR, OP_MAKE_DIR_REPLY, OP_REMOVE_DIR, OP_REMOVE_DIR_REPLY,\
+    OP_LIST_DIR, OP_LIST_DIR_REPLY, OP_STATUS_DIR, OP_STATUS_DIR_REPLY,\
+    OP_VALID_DIR, OP_VALID_DIR_REPLY, RET_FAILURE, RET_SUCCESS
 from simplecfs.message.packet import pack, unpack, AddChunkPacket,\
     AddChunkReplyPacket, DeleteChunkPacket, DeleteChunkReplyPacket,\
-    GetChunkPacket, GetChunkReplyPacket, MakeDirPacket, MakeDirReplyPacket
+    GetChunkPacket, GetChunkReplyPacket, MakeDirPacket, MakeDirReplyPacket,\
+    RemoveDirPacket, RemoveDirReplyPacket, ListDirPacket, ListDirReplyPacket,\
+    StatusDirPacket, StatusDirReplyPacket, ValidDirPacket, ValidDirReplyPacket
 
 
 def test_pack_unpack():
@@ -172,5 +176,125 @@ class TestMakeDirRePlyPacket(object):
         packet = MakeDirReplyPacket(state, info)
         msg = packet.get_message()
         eq_(OP_MAKE_DIR_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+
+class TestRemoveDirPacket(object):
+    """the remove dir packet"""
+    def test_get_message(self):
+        dirname = '/testdir/'
+        packet = RemoveDirPacket(dirname)
+        msg = packet.get_message()
+        eq_(OP_REMOVE_DIR, msg['method'])
+        eq_(dirname, msg['dirname'])
+
+
+class TestRemoveDirRePlyPacket(object):
+    """the remove dir reply packet"""
+    def test_get_message(self):
+        state = RET_SUCCESS
+        info = 'test infomation'
+        packet = RemoveDirReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_REMOVE_DIR_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+        state = RET_FAILURE
+        info = {'error id': 12, 'error msg': 'test error'}
+        packet = RemoveDirReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_REMOVE_DIR_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+
+class TestListDirPacket(object):
+    """the list dir packet"""
+    def test_get_message(self):
+        dirname = '/testdir/'
+        packet = ListDirPacket(dirname)
+        msg = packet.get_message()
+        eq_(OP_LIST_DIR, msg['method'])
+        eq_(dirname, msg['dirname'])
+
+
+class TestListDirRePlyPacket(object):
+    """the list dir reply packet"""
+    def test_get_message(self):
+        state = RET_SUCCESS
+        info = ['/me/hello', '/me/dir/']
+        packet = ListDirReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_LIST_DIR_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+        state = RET_FAILURE
+        info = {'error id': 12, 'error msg': 'test error'}
+        packet = ListDirReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_LIST_DIR_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+
+class TestStatusDirPacket(object):
+    """the status dir packet"""
+    def test_get_message(self):
+        dirname = '/testdir/'
+        packet = StatusDirPacket(dirname)
+        msg = packet.get_message()
+        eq_(OP_STATUS_DIR, msg['method'])
+        eq_(dirname, msg['dirname'])
+
+
+class TestStatusDirRePlyPacket(object):
+    """the status dir reply packet"""
+    def test_get_message(self):
+        state = RET_SUCCESS
+        info = 'test infomation'
+        packet = StatusDirReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_STATUS_DIR_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+        state = RET_FAILURE
+        info = {'error id': 12, 'error msg': 'test error'}
+        packet = StatusDirReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_STATUS_DIR_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+
+class TestValidDirPacket(object):
+    """the valid dir packet"""
+    def test_get_message(self):
+        dirname = '/testdir/'
+        packet = ValidDirPacket(dirname)
+        msg = packet.get_message()
+        eq_(OP_VALID_DIR, msg['method'])
+        eq_(dirname, msg['dirname'])
+
+
+class TestValidDirRePlyPacket(object):
+    """the valid dir reply packet"""
+    def test_get_message(self):
+        state = RET_SUCCESS
+        info = 'test infomation'
+        packet = ValidDirReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_VALID_DIR_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+        state = RET_FAILURE
+        info = {'error id': 12, 'error msg': 'test error'}
+        packet = ValidDirReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_VALID_DIR_REPLY, msg['method'])
         eq_(state, msg['state'])
         eq_(info, msg['info'])
