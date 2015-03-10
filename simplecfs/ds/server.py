@@ -2,14 +2,16 @@
 """
 dateserver network server
 """
+import sys
 import eventlet
 import logging
+import socket
 
 from simplecfs.ds.local_storage import DSStore
 from simplecfs.message.packet import AddChunkReplyPacket,\
-    DeleteChunkReplyPacket, GetChunkReplyPacket
+    DeleteChunkReplyPacket, GetChunkReplyPacket, AddDSPacket
 from simplecfs.common.parameters import OP_ADD_CHUNK, OP_DELETE_CHUNK,\
-    OP_GET_CHUNK
+    OP_GET_CHUNK, RET_FAILURE
 from simplecfs.message.network_handler import recv_command,\
     recv_data, send_command, send_data
 
@@ -32,11 +34,46 @@ class DSServer(object):
         logging.info('get store dir: %s', store_dir)
         self._ds = DSStore(store_dir)
 
+        # register to mds
+        mds_ip = config.get('mds', 'mds_ip')
+        mds_port = config.getint('mds', 'mds_port')
+        self._add_ds(mds_ip, mds_port)
+
+        # handler for request to ds
         self._handlers = {
             OP_ADD_CHUNK: self._handle_add_chunk,
             OP_DELETE_CHUNK: self._handle_delete_chunk,
             OP_GET_CHUNK: self._handle_get_chunk,
         }
+
+    def _add_ds(self, mds_ip='127.0.0.1', mds_port=8000):
+        """register ds to mds"""
+        logging.info('add ds to mds')
+        rack_id = self._config.getint('dataserver', 'rack_id')
+        ds_ip = self._config.get('dataserver', 'ds_ip')
+        ds_port = self._config.getint('dataserver', 'ds_port')
+
+        packet = AddDSPacket(rack_id, ds_ip, ds_port)
+        msg = packet.get_message()
+
+        try:
+            sock = eventlet.connect((mds_ip, mds_port))
+        except socket.error:
+            logging.error('can not connect to mds %s:%d', mds_ip, mds_port)
+            sys.exit('can not connect to mds, start mds and set the conf file!')
+        sock_fd = sock.makefile('rw')
+
+        logging.info('add ds msg: %s', msg)
+        send_command(sock_fd, msg)
+
+        recv = recv_command(sock_fd)
+        state = recv['state']
+        if state == RET_FAILURE:
+            logging.error('add ds error, return :%s', recv)
+            sys.exit('add ds error, mds return ' + recv)
+
+        sock_fd.close()
+        return state
 
     def _handle_add_chunk(self, filed, args):
         """handle client -> ds add chunk request, and response"""

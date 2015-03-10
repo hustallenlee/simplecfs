@@ -114,3 +114,45 @@ class TestMDSStore(object):
 
         ret = mds.lsdir(dirname)
         eq_(dirname in ret, False)
+
+    def test_ds(self):
+        # connet to redis
+        mds = MDSStore(host='127.0.0.1', port=6379, db=0)
+
+        ds_ip = '127.0.0.1'
+        ds_port = 7000
+        dsinfo = {
+            'space': 23223,
+            'chunk_num': 87,
+        }
+
+        ret = mds.addds(ds_ip, ds_port, dsinfo)
+        eq_(ret, True)
+
+        ret = mds.getds(ds_ip, ds_port)
+        eq_(ret['chunk_num'], 87)
+
+        ret = mds.hasds(ds_ip, ds_port)
+        eq_(ret, True)
+
+        ret = mds.hasds('/nosuchip', 899)
+        eq_(ret, False)
+
+        ret = mds.getds(ds_ip, ds_port)
+        eq_(ret, dsinfo)
+
+        newinfo = {
+            'space': 23323,
+            'chunk_num': 88,
+        }
+        ret = mds.updateds(ds_ip, ds_port, newinfo)
+        eq_(ret, True)
+
+        ret = mds.getds(ds_ip, ds_port)
+        eq_(ret['chunk_num'], 88)
+
+        ret = mds.delds(ds_ip, ds_port)
+        eq_(ret, True)
+
+        ret = mds.hasds(ds_ip, ds_port)
+        eq_(ret, False)

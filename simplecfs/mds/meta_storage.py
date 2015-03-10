@@ -6,7 +6,7 @@ import redis
 import logging
 import json
 
-from simplecfs.mds.meta_table import dir_key, sub_key
+from simplecfs.mds.meta_table import dir_key, sub_key, ds_key
 
 
 class MDSStore(object):
@@ -107,8 +107,40 @@ class MDSStore(object):
             return True
 
         subs.remove(subfile)
-        return self.set(key, subs)
+        if subs:
+            ret = self.set(key, subs)
+        else:
+            ret = self.delete(key)
+        return ret
 
     def hassub(self, dirname):
         logging.info('meta hassub %s', dirname)
         return self.exists(sub_key(dirname))
+
+    def addds(self, ds_ip, ds_port, dsinfo):
+        logging.info('meta addds ip:%s,port:%s,info:%s', ds_ip, ds_port, dsinfo)
+
+        key = ds_key(ds_ip, ds_port)
+        ret = self.set(key, dsinfo)
+        return ret
+
+    def updateds(self, ds_ip, ds_port, dsinfo):
+        logging.info('updateds ip:%s,port:%s,info:%s', ds_ip, ds_port, dsinfo)
+
+        key = ds_key(ds_ip, ds_port)
+        ret = self.set(key, dsinfo)
+        return ret
+
+    def hasds(self, ds_ip, ds_port):
+        logging.info('meta hasds: ip:%s port:%d', ds_ip, ds_port)
+        return self.exists(ds_key(ds_ip, ds_port))
+
+    def delds(self, ds_ip, ds_port):
+        logging.info('meta delds: ip:%s port:%d', ds_ip, ds_port)
+        key = ds_key(ds_ip, ds_port)
+        return self.delete(key)
+
+    def getds(self, ds_ip, ds_port):
+        logging.info('meta getds: ip:%s port:%d', ds_ip, ds_port)
+        key = ds_key(ds_ip, ds_port)
+        return self.get(key)

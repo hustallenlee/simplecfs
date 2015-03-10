@@ -162,35 +162,6 @@ class AddDSReplyPacket(object):
         return self._message
 
 
-class CheckDSPacket(object):
-    """
-    define the check ds packet
-    """
-    def __init__(self):
-        self._message = {}
-        self._message['method'] = OP_CHECK_DS
-
-    def get_message(self):
-        """return add chunk packet message"""
-        return self._message
-
-
-class CheckDSReplyPacket(object):
-    """check ds reply packet"""
-    def __init__(self, state, info=''):
-        """
-        @state: RET_FAILURE/RET_SUCCESS/etc.
-        """
-        self._message = {}
-        self._message['method'] = OP_CHECK_DS_REPLY
-        self._message['state'] = state
-        self._message['info'] = info
-
-    def get_message(self):
-        """return add chunk packet message"""
-        return self._message
-
-
 class CheckChunkPacket(object):
     """
     define the check chunk packet
@@ -228,9 +199,11 @@ class ReportDSPacket(object):
     """
     define the report ds packet
     """
-    def __init__(self, info):
+    def __init__(self, ds_ip, ds_port, info):
         self._message = {}
         self._message['method'] = OP_REPORT_DS
+        self._message['ds_ip'] = ds_ip
+        self._message['ds_port'] = ds_port
         self._message['info'] = info
 
     def get_message(self):

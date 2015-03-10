@@ -176,34 +176,6 @@ class TestAddDSRePlyPacket(object):
         eq_(info, msg['info'])
 
 
-class TestCheckDSPacket(object):
-    """the check ds packet"""
-    def test_get_message(self):
-        packet = CheckDSPacket()
-        msg = packet.get_message()
-        eq_(OP_CHECK_DS, msg['method'])
-
-
-class TestCheckDSRePlyPacket(object):
-    """the check ds reply packet"""
-    def test_get_message(self):
-        state = RET_SUCCESS
-        info = 'test infomation'
-        packet = CheckDSReplyPacket(state, info)
-        msg = packet.get_message()
-        eq_(OP_CHECK_DS_REPLY, msg['method'])
-        eq_(state, msg['state'])
-        eq_(info, msg['info'])
-
-        state = RET_FAILURE
-        info = {'error id': 12, 'error msg': 'test error'}
-        packet = CheckDSReplyPacket(state, info)
-        msg = packet.get_message()
-        eq_(OP_CHECK_DS_REPLY, msg['method'])
-        eq_(state, msg['state'])
-        eq_(info, msg['info'])
-
-
 class TestCheckChunkPacket(object):
     """the check chunk packet"""
     def test_get_message(self):
@@ -241,7 +213,9 @@ class TestReportDSPacket(object):
             'space': 10240,
             'chunk_num': 78,
         }
-        packet = ReportDSPacket(info)
+        ds_ip = '127.0.0.1'
+        ds_port = 7000
+        packet = ReportDSPacket(ds_ip, ds_port, info)
         msg = packet.get_message()
         eq_(OP_REPORT_DS, msg['method'])
         eq_(info, msg['info'])

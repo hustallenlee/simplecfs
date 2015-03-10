@@ -11,6 +11,10 @@ RET_FAILURE = False
 
 # ==== DS defined parameters ====
 
+# ds state
+DS_CONNECTED = 'OK'
+DS_BROKEN = 'FAILED'
+
 # chunk state
 CHUNK_OK = 1000
 CHUNK_MISSING = 1001
@@ -35,9 +39,6 @@ OP_GET_CHUNK_REPLY = 'GET_CHUNK_REPLY'
 # ---- operations between ds and mds
 OP_ADD_DS = 'ADD_DS'
 OP_ADD_DS_REPLY = 'ADD_DS_REPLY'
-
-OP_CHECK_DS = 'CHECK_DS'
-OP_CHECK_DS_REPLY = 'CHECK_DS_REPLY'
 
 OP_CHECK_CHUNK = 'CHECK_CHUNK'
 OP_CHECK_CHUNK_REPLY = 'CHECK_CHUNK_REPLY'

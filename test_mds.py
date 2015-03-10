@@ -11,7 +11,8 @@ import logging.handlers
 import eventlet
 
 from simplecfs.message.packet import MakeDirPacket, RemoveDirPacket,\
-    ListDirPacket, StatusDirPacket, ValidDirPacket
+    ListDirPacket, StatusDirPacket, ValidDirPacket, AddDSPacket,\
+    ReportDSPacket
 from simplecfs.message.network_handler import send_command, recv_command
 
 
@@ -139,6 +140,50 @@ def test_valid_dir(dirname='/testdir/'):
     sock_fd.close()
 
 
+def test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7000):
+    """test function: add_ds(rack_id, ds_ip, ds_port)
+    """
+    print 'add ds, rack_id:%d ip:%s port:%d' % (rack_id, ds_ip, ds_port)
+    packet = AddDSPacket(rack_id, ds_ip, ds_port)
+    msg = packet.get_message()
+
+    sock = get_new_connection()
+    sock_fd = sock.makefile('rw')
+
+    logging.info('%s', msg)
+    send_command(sock_fd, msg)
+
+    recv = recv_command(sock_fd)
+    print recv
+    logging.info('recv: %s', recv)
+    sock_fd.close()
+
+
+def test_report_ds():
+    """test function: report_ds(info)
+    report ds state info to mds
+    """
+    ds_ip = '127.0.0.1'
+    ds_port = 7000
+    info = {
+        'space': 102400,
+        'chunk_num': 898,
+    }
+    packet = ReportDSPacket(ds_ip, ds_port, info)
+    msg = packet.get_message()
+
+    sock = get_new_connection()
+    sock_fd = sock.makefile('rw')
+
+    logging.info('%s', msg)
+    send_command(sock_fd, msg)
+
+    recv = recv_command(sock_fd)
+    print recv
+    logging.info('recv: %s', recv)
+    sock_fd.close()
+
+
 def main():
     """init client"""
     # handle command line argument
@@ -185,6 +230,9 @@ def main():
     test_list_dir('/')
     test_status_dir(dirname)
     test_valid_dir(dirname)
+
+    test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7000)
+    test_report_ds()
 
 
 if __name__ == '__main__':

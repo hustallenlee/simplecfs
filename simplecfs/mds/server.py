@@ -5,13 +5,16 @@ mds network server and the main controller
 import eventlet
 import logging
 import time
+import socket
 
 from simplecfs.mds.meta_storage import MDSStore
 from simplecfs.message.network_handler import recv_command, send_command
 from simplecfs.common.parameters import RET_SUCCESS, RET_FAILURE, OP_MAKE_DIR,\
-    OP_REMOVE_DIR, OP_LIST_DIR, OP_STATUS_DIR, OP_VALID_DIR
+    OP_REMOVE_DIR, OP_LIST_DIR, OP_STATUS_DIR, OP_VALID_DIR, OP_ADD_DS,\
+    OP_REPORT_DS, DS_CONNECTED, DS_BROKEN
 from simplecfs.message.packet import MakeDirReplyPacket, RemoveDirReplyPacket,\
-    ListDirReplyPacket, StatusDirReplyPacket, ValidDirReplyPacket
+    ListDirReplyPacket, StatusDirReplyPacket, ValidDirReplyPacket,\
+    AddDSReplyPacket, ReportDSReplyPacket
 
 
 class MDSServer(object):
@@ -36,12 +39,87 @@ class MDSServer(object):
         self.mds = MDSStore(host=redis_host, port=redis_port, db=redis_db)
 
         self._handlers = {
+            OP_ADD_DS: self._handle_add_ds,
+            OP_REPORT_DS: self._handle_report_ds,
             OP_MAKE_DIR: self._handle_make_dir,
             OP_REMOVE_DIR: self._handle_remove_dir,
             OP_LIST_DIR: self._handle_list_dir,
             OP_STATUS_DIR: self._handle_status_dir,
             OP_VALID_DIR: self._handle_valid_dir,
         }
+
+    def _check_ds(self, ds_ip, ds_port):
+        """check ds status and change the meta data"""
+
+        state = DS_CONNECTED
+        try:
+            eventlet.connect((ds_ip, ds_port))
+        except socket.error:
+            logging.exception('can not connet to ds')
+            state = DS_BROKEN
+
+        # update ds state
+        value = self.mds.getds(ds_ip, ds_port)
+        value['status'] = state
+        ret = self.mds.updateds(ds_ip, ds_port, value)
+
+        return ret
+
+    def _handle_add_ds(self, filed, args):
+        """handle ds -> mds add ds request, and response"""
+        logging.info('handle add ds request')
+
+        # get the ds info
+        rack_id = args['rack_id']
+        ds_ip = args['ds_ip']
+        ds_port = args['ds_port']
+        ds_info = {
+            'ip': ds_ip,
+            'port': ds_port,
+            'rack': rack_id,
+            'status': DS_CONNECTED,
+        }
+
+        state = RET_SUCCESS
+        info = 'ok'
+
+        # write to meta db
+        state = self.mds.addds(ds_ip, ds_port, ds_info)
+        if state == RET_FAILURE:
+            info = 'mds addds error'
+
+        # reply to client
+        reply = AddDSReplyPacket(state, info)
+        msg = reply.get_message()
+        logging.info("add ds return: %s", msg)
+        send_command(filed, msg)
+
+    def _handle_report_ds(self, filed, args):
+        """handle ds -> mds report ds request, and response"""
+        logging.info('handle report ds request')
+
+        # get the ds info
+        ds_ip = args['ds_ip']
+        ds_port = args['ds_port']
+        ds_info = args['info']
+
+        state = RET_SUCCESS
+        info = 'ok'
+
+        # write to meta db
+        value = self.mds.getds(ds_ip, ds_port)
+        for key in ds_info.keys():
+            value[key] = ds_info[key]
+
+        state = self.mds.updateds(ds_ip, ds_port, value)
+        if state == RET_FAILURE:
+            info = 'report ds error'
+
+        # reply to client
+        reply = ReportDSReplyPacket(state, info)
+        msg = reply.get_message()
+        logging.info("report ds return: %s", msg)
+        send_command(filed, msg)
 
     def _isvalid_dirname(self, dirname):
         """check weather dirname is a valid path name"""
