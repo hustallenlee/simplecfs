@@ -4,16 +4,8 @@ unit test for packet module
 """
 from nose.tools import eq_
 
-from simplecfs.common.parameters import OP_ADD_CHUNK, OP_ADD_CHUNK_REPLY,\
-    OP_DELETE_CHUNK, OP_DELETE_CHUNK_REPLY, OP_GET_CHUNK, OP_GET_CHUNK_REPLY,\
-    OP_MAKE_DIR, OP_MAKE_DIR_REPLY, OP_REMOVE_DIR, OP_REMOVE_DIR_REPLY,\
-    OP_LIST_DIR, OP_LIST_DIR_REPLY, OP_STATUS_DIR, OP_STATUS_DIR_REPLY,\
-    OP_VALID_DIR, OP_VALID_DIR_REPLY, RET_FAILURE, RET_SUCCESS
-from simplecfs.message.packet import pack, unpack, AddChunkPacket,\
-    AddChunkReplyPacket, DeleteChunkPacket, DeleteChunkReplyPacket,\
-    GetChunkPacket, GetChunkReplyPacket, MakeDirPacket, MakeDirReplyPacket,\
-    RemoveDirPacket, RemoveDirReplyPacket, ListDirPacket, ListDirReplyPacket,\
-    StatusDirPacket, StatusDirReplyPacket, ValidDirPacket, ValidDirReplyPacket
+from simplecfs.common.parameters import *   # NOQA
+from simplecfs.message.packet import *      # NOQA
 
 
 def test_pack_unpack():
@@ -143,9 +135,101 @@ class TestGetChunkRePlyPacket(object):
 
         state = RET_FAILURE
         info = {'error id': 12, 'error msg': 'test error'}
-        packet = DeleteChunkReplyPacket(state, info)
+        packet = GetChunkReplyPacket(state, info)
         msg = packet.get_message()
-        eq_(OP_DELETE_CHUNK_REPLY, msg['method'])
+        eq_(OP_GET_CHUNK_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+
+class TestAddDSPacket(object):
+    """the add dspacket"""
+    def test_get_message(self):
+        rack_id = 0
+        ds_ip = '127.0.0.1'
+        ds_port = 7000
+        packet = AddDSPacket(rack_id, ds_ip, ds_port)
+        msg = packet.get_message()
+        eq_(OP_ADD_DS, msg['method'])
+        eq_(rack_id, msg['rack_id'])
+        eq_(ds_ip, msg['ds_ip'])
+        eq_(ds_port, msg['ds_port'])
+
+
+class TestAddDSRePlyPacket(object):
+    """the add ds reply packet"""
+    def test_get_message(self):
+        state = RET_SUCCESS
+        info = 'test infomation'
+        packet = AddDSReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_ADD_DS_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+        state = RET_FAILURE
+        info = {'error id': 12, 'error msg': 'test error'}
+        packet = AddDSReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_ADD_DS_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+
+class TestCheckDSPacket(object):
+    """the check ds packet"""
+    def test_get_message(self):
+        packet = CheckDSPacket()
+        msg = packet.get_message()
+        eq_(OP_CHECK_DS, msg['method'])
+
+
+class TestCheckDSRePlyPacket(object):
+    """the check ds reply packet"""
+    def test_get_message(self):
+        state = RET_SUCCESS
+        info = 'test infomation'
+        packet = CheckDSReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_CHECK_DS_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+        state = RET_FAILURE
+        info = {'error id': 12, 'error msg': 'test error'}
+        packet = CheckDSReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_CHECK_DS_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+
+class TestCheckChunkPacket(object):
+    """the check chunk packet"""
+    def test_get_message(self):
+        chunk_id = 'ob0_chk1'
+        packet = CheckChunkPacket(chunk_id)
+        msg = packet.get_message()
+        eq_(OP_CHECK_CHUNK, msg['method'])
+        eq_(chunk_id, msg['chunk_id'])
+
+
+class TestCheckChunkRePlyPacket(object):
+    """the check chunk reply packet"""
+    def test_get_message(self):
+        state = RET_SUCCESS
+        info = 'test infomation'
+        packet = CheckChunkReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_CHECK_CHUNK_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+        state = RET_FAILURE
+        info = {'error id': 12, 'error msg': 'test error'}
+        packet = CheckChunkReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_CHECK_CHUNK_REPLY, msg['method'])
         eq_(state, msg['state'])
         eq_(info, msg['info'])
 

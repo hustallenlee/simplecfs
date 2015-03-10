@@ -4,11 +4,7 @@ define network packet
 """
 import json
 
-from simplecfs.common.parameters import OP_ADD_CHUNK, OP_ADD_CHUNK_REPLY,\
-    OP_DELETE_CHUNK, OP_DELETE_CHUNK_REPLY, OP_GET_CHUNK, OP_GET_CHUNK_REPLY,\
-    OP_MAKE_DIR, OP_MAKE_DIR_REPLY, OP_REMOVE_DIR, OP_REMOVE_DIR_REPLY,\
-    OP_LIST_DIR, OP_LIST_DIR_REPLY, OP_STATUS_DIR, OP_STATUS_DIR_REPLY,\
-    OP_VALID_DIR, OP_VALID_DIR_REPLY
+from simplecfs.common.parameters import *  # NOQA
 
 
 def pack(data):
@@ -125,6 +121,106 @@ class GetChunkReplyPacket(object):
 
     def get_message(self):
         """return get chunk packet message"""
+        return self._message
+
+
+# ---- packet between ds and mds ----
+
+class AddDSPacket(object):
+    """
+    define the add ds packet
+    """
+    def __init__(self, rack_id, ds_ip, ds_port):
+        """
+        @rack_id: rack id of ds
+        @ds_ip, @ds_port: ds listen ip and port
+        """
+        self._message = {}
+        self._message['method'] = OP_ADD_DS
+        self._message['rack_id'] = rack_id
+        self._message['ds_ip'] = ds_ip
+        self._message['ds_port'] = ds_port
+
+    def get_message(self):
+        """return add ds packet message"""
+        return self._message
+
+
+class AddDSReplyPacket(object):
+    """add ds reply packet"""
+    def __init__(self, state, info=''):
+        """
+        @state: RET_FAILURE/RET_SUCCESS/etc.
+        """
+        self._message = {}
+        self._message['method'] = OP_ADD_DS_REPLY
+        self._message['state'] = state
+        self._message['info'] = info
+
+    def get_message(self):
+        """return add ds packet message"""
+        return self._message
+
+
+class CheckDSPacket(object):
+    """
+    define the check ds packet
+    """
+    def __init__(self):
+        self._message = {}
+        self._message['method'] = OP_CHECK_DS
+
+    def get_message(self):
+        """return add chunk packet message"""
+        return self._message
+
+
+class CheckDSReplyPacket(object):
+    """check ds reply packet"""
+    def __init__(self, state, info=''):
+        """
+        @state: RET_FAILURE/RET_SUCCESS/etc.
+        """
+        self._message = {}
+        self._message['method'] = OP_CHECK_DS_REPLY
+        self._message['state'] = state
+        self._message['info'] = info
+
+    def get_message(self):
+        """return add chunk packet message"""
+        return self._message
+
+
+class CheckChunkPacket(object):
+    """
+    define the check chunk packet
+    """
+    def __init__(self, chunk_id):
+        """
+        @chunk_id: the chunk id to be checked
+        """
+        self._message = {}
+        self._message['method'] = OP_CHECK_CHUNK
+        self._message['chunk_id'] = chunk_id
+
+    def get_message(self):
+        """return add chunk packet message"""
+        return self._message
+
+
+class CheckChunkReplyPacket(object):
+    """check chunk reply packet"""
+    def __init__(self, state, info=''):
+        """
+        @state: RET_FAILURE/RET_SUCCESS/etc.
+        """
+        self._message = {}
+        self._message['method'] = OP_CHECK_CHUNK_REPLY
+        self._message['state'] = state
+        self._message['info'] = info
+
+    def get_message(self):
+        """return add chunk packet message"""
         return self._message
 
 
