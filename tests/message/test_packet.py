@@ -234,6 +234,39 @@ class TestCheckChunkRePlyPacket(object):
         eq_(info, msg['info'])
 
 
+class TestReportDSPacket(object):
+    """the report ds packet"""
+    def test_get_message(self):
+        info = {
+            'space': 10240,
+            'chunk_num': 78,
+        }
+        packet = ReportDSPacket(info)
+        msg = packet.get_message()
+        eq_(OP_REPORT_DS, msg['method'])
+        eq_(info, msg['info'])
+
+
+class TestReportDSRePlyPacket(object):
+    """the report ds reply packet"""
+    def test_get_message(self):
+        state = RET_SUCCESS
+        info = 'test infomation'
+        packet = ReportDSReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_REPORT_DS_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+        state = RET_FAILURE
+        info = {'error id': 12, 'error msg': 'test error'}
+        packet = ReportDSReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_REPORT_DS_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+
 class TestMakeDirPacket(object):
     """the make dir packet"""
     def test_get_message(self):
