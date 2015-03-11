@@ -42,7 +42,7 @@ class MDSStore(object):
     def exists(self, key):
         '''exists a key'''
         ret = self.r.exists(key)
-        return ret
+        return bool(ret)
 
     def mkdir(self, dirname, dirinfo):
         logging.info('meta mkdir %s, %s', dirname, dirinfo)
