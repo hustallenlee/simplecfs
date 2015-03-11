@@ -37,7 +37,7 @@ class MDSStore(object):
     def delete(self, key):
         '''delete data by key'''
         ret = self.r.delete(key)
-        return ret
+        return bool(ret)
 
     def exists(self, key):
         '''exists a key'''
