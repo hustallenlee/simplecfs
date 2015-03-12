@@ -48,7 +48,7 @@ def test_ds():
     config.read(DS_CONFIG_FILE)
 
     # start server
-    ds_ = DSServer(config)
+    ds_ = DSServer(config, test=True)
     POOL.spawn_n(start_server, ds_)
 
     # test add chunk
@@ -120,11 +120,6 @@ def test_ds():
     eq_(recv['method'], OP_DELETE_CHUNK_REPLY)
 
 
-def test_check_ds():
-    """test function: check_ds()"""
-    pass
-
-
 def test_check_chunk():
     """test function: check_chunk(chunk_id)"""
-    pass
+    pass  # TODO: move to test_ds

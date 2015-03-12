@@ -19,7 +19,7 @@ from simplecfs.message.network_handler import recv_command,\
 class DSServer(object):
     """data server to handle network request and response"""
 
-    def __init__(self, config):
+    def __init__(self, config, test=False):
         """@config: ConfigParser() object"""
         self._config = config
 
@@ -34,10 +34,11 @@ class DSServer(object):
         logging.info('get store dir: %s', store_dir)
         self._ds = DSStore(store_dir)
 
-        # register to mds
-        mds_ip = config.get('mds', 'mds_ip')
-        mds_port = config.getint('mds', 'mds_port')
-        self._add_ds(mds_ip, mds_port)
+        # register to mds when not in testmode
+        if not test:
+            mds_ip = config.get('mds', 'mds_ip')
+            mds_port = config.getint('mds', 'mds_port')
+            self._add_ds(mds_ip, mds_port)
 
         # handler for request to ds
         self._handlers = {
