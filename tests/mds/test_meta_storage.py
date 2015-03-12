@@ -5,6 +5,7 @@ unit test for meta_storage module
 from nose.tools import eq_
 
 from simplecfs.mds.meta_storage import MDSStore
+from simplecfs.common.parameters import DS_CONNECTED, DS_BROKEN
 
 
 class TestMDSStore(object):
@@ -124,10 +125,17 @@ class TestMDSStore(object):
         dsinfo = {
             'space': 23223,
             'chunk_num': 87,
+            'status': DS_CONNECTED,
         }
 
         ret = mds.addds(ds_ip, ds_port, dsinfo)
         eq_(ret, True)
+
+        ret = mds.is_alive_ds(ds_ip, ds_port)
+        eq_(ret, True)
+
+        ret = mds.get_alive_ds()
+        eq_(True, '127.0.0.1:7000' in ret)
 
         ret = mds.getds(ds_ip, ds_port)
         eq_(ret['chunk_num'], 87)
@@ -144,9 +152,13 @@ class TestMDSStore(object):
         newinfo = {
             'space': 23323,
             'chunk_num': 88,
+            'status': DS_BROKEN,
         }
         ret = mds.updateds(ds_ip, ds_port, newinfo)
         eq_(ret, True)
+
+        ret = mds.is_alive_ds(ds_ip, ds_port)
+        eq_(ret, False)
 
         ret = mds.getds(ds_ip, ds_port)
         eq_(ret['chunk_num'], 88)

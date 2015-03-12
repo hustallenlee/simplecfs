@@ -184,7 +184,7 @@ def test_report_ds():
     sock_fd.close()
 
 
-def main():
+def init():
     """init client"""
     # handle command line argument
     parser = argparse.ArgumentParser()
@@ -216,24 +216,24 @@ def main():
     handler.setFormatter(log_format)
     logger.addHandler(handler)
 
-    # start test mds
-    dirname = '/testdir/'
-    test_make_dir(dirname)
-    test_list_dir('/')
-    test_list_dir(dirname)
-    test_status_dir(dirname)
-    test_status_dir('/nosuchdir/')
-    test_valid_dir(dirname)
-    test_valid_dir('/nosuchdir/')
-    test_remove_dir('/nosuchdir/')
-    test_remove_dir(dirname)
-    test_list_dir('/')
-    test_status_dir(dirname)
-    test_valid_dir(dirname)
-
-    test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7000)
-    test_report_ds()
-
 
 if __name__ == '__main__':
-    main()
+    init()
+
+    # start test mds
+    # dirname = '/testdir/'
+    # test_make_dir(dirname)
+    # test_list_dir('/')
+    # test_list_dir(dirname)
+    # test_status_dir(dirname)
+    # test_status_dir('/nosuchdir/')
+    # test_valid_dir(dirname)
+    # test_valid_dir('/nosuchdir/')
+    # test_remove_dir('/nosuchdir/')
+    # test_remove_dir(dirname)
+    # test_list_dir('/')
+    # test_status_dir(dirname)
+    # test_valid_dir(dirname)
+
+    # test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7000)
+    # test_report_ds()

@@ -6,7 +6,8 @@ import redis
 import logging
 import json
 
-from simplecfs.mds.meta_table import dir_key, sub_key, ds_key
+from simplecfs.mds.meta_table import dir_key, sub_key, ds_key, ds_alive_key
+from simplecfs.common.parameters import DS_BROKEN, RET_SUCCESS
 
 
 class MDSStore(object):
@@ -117,11 +118,58 @@ class MDSStore(object):
         logging.info('meta hassub %s', dirname)
         return self.exists(sub_key(dirname))
 
+    def add_alive_ds(self, ds_ip, ds_port):
+        key = ds_alive_key()
+        item = '%s:%d' % (ds_ip, ds_port)
+        lists = self.get(key)
+        if not lists:
+            lists = []
+
+        ret = True
+        if item not in lists:
+            lists.append(item)
+            ret = self.set(key, lists)
+
+        return ret
+
+    def del_alive_ds(self, ds_ip, ds_port):
+        key = ds_alive_key()
+        item = '%s:%d' % (ds_ip, ds_port)
+        lists = self.get(key)
+
+        ret = True
+        if item in lists:
+            lists.remove(item)
+            ret = self.set(key, lists)
+
+        return ret
+
+    def get_alive_ds(self):
+        key = ds_alive_key()
+        lists = self.get(key)
+
+        return lists
+
+    def is_alive_ds(self, ds_ip, ds_port):
+        key = ds_alive_key()
+        item = '%s:%d' % (ds_ip, ds_port)
+        lists = self.get(key)
+
+        ret = False
+        if item in lists:
+            ret = True
+
+        return ret
+
     def addds(self, ds_ip, ds_port, dsinfo):
         logging.info('meta addds ip:%s,port:%s,info:%s', ds_ip, ds_port, dsinfo)
 
         key = ds_key(ds_ip, ds_port)
         ret = self.set(key, dsinfo)
+
+        if ret == RET_SUCCESS:
+            ret = self.add_alive_ds(ds_ip, ds_port)
+
         return ret
 
     def updateds(self, ds_ip, ds_port, dsinfo):
@@ -129,6 +177,10 @@ class MDSStore(object):
 
         key = ds_key(ds_ip, ds_port)
         ret = self.set(key, dsinfo)
+
+        if ret and dsinfo['status'] == DS_BROKEN:
+            ret = self.del_alive_ds(ds_ip, ds_port)
+
         return ret
 
     def hasds(self, ds_ip, ds_port):
@@ -138,7 +190,12 @@ class MDSStore(object):
     def delds(self, ds_ip, ds_port):
         logging.info('meta delds: ip:%s port:%d', ds_ip, ds_port)
         key = ds_key(ds_ip, ds_port)
-        return self.delete(key)
+        ret = self.delete(key)
+
+        if ret == RET_SUCCESS:
+            ret = self.del_alive_ds(ds_ip, ds_port)
+
+        return ret
 
     def getds(self, ds_ip, ds_port):
         logging.info('meta getds: ip:%s port:%d', ds_ip, ds_port)

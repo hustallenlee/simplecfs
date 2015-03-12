@@ -5,7 +5,7 @@ unit test for meta tables
 from nose.tools import eq_
 
 from simplecfs.mds.meta_table import dir_key, sub_key, file_key, obj_key,\
-    chk_key, ds_key
+    chk_key, ds_key, ds_alive_key
 
 
 def test_dir_key():
@@ -43,3 +43,8 @@ def test_ds_key():
     port = 7000
     key = ds_key(ip, port)
     eq_(key, 'ds:127.0.0.1:7000')
+
+
+def test_ds_alive_key():
+    key = ds_alive_key()
+    eq_(key, 'ds_alive')

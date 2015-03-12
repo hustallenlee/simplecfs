@@ -9,6 +9,7 @@ FILE_PREFIX = 'file:'   # file
 OBJ_PREFIX = 'obj:'     # object
 CHK_PREFIX = 'chk:'     # chunk
 DS_PREFIX = 'ds:'       # ds
+DS_ALIVE = 'ds_alive'   # ds alive list
 
 
 def dir_key(dirname):
@@ -39,3 +40,7 @@ def chk_key(chkname):
 def ds_key(ip, port):
     """use ip and port to get ds key"""
     return DS_PREFIX + ip + ':' + str(port)
+
+
+def ds_alive_key():
+    return DS_ALIVE
