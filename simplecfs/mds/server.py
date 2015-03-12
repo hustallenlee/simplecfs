@@ -78,6 +78,7 @@ class MDSServer(object):
             'port': ds_port,
             'rack': rack_id,
             'status': DS_CONNECTED,
+            'update_time': time.asctime(),
         }
 
         state = RET_SUCCESS
@@ -111,6 +112,7 @@ class MDSServer(object):
         for key in ds_info.keys():
             value[key] = ds_info[key]
 
+        value['update_time'] = time.asctime()
         state = self.mds.updateds(ds_ip, ds_port, value)
         if state == RET_FAILURE:
             info = 'report ds error'
