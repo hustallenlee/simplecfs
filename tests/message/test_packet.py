@@ -389,3 +389,252 @@ class TestValidDirRePlyPacket(object):
         eq_(OP_VALID_DIR_REPLY, msg['method'])
         eq_(state, msg['state'])
         eq_(info, msg['info'])
+
+
+class TestAddFilePacket(object):
+    """the add file packet"""
+    def test_get_message(self):
+        file_name = '/testfile'
+        file_info = {
+            'size': 12343,
+            'code': {
+                'code': 'rs',
+                'k': 8,
+                'm': 7,
+            }
+        }
+        packet = AddFilePacket(file_name, file_info)
+        msg = packet.get_message()
+        eq_(OP_ADD_FILE, msg['method'])
+        eq_(file_name, msg['name'])
+        eq_(file_info, msg['info'])
+
+
+class TestAddFileReplyPacket(object):
+    """the add file packet"""
+    def test_get_message(self):
+        state = RET_SUCCESS
+        info = 'test infomation'
+        packet = AddFileReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_ADD_FILE_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+        state = RET_FAILURE
+        info = {'error id': 12, 'error msg': 'test error'}
+        packet = AddFileReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_ADD_FILE_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+
+class TestAddFileCommitPacket(object):
+    """the add file commit packet"""
+    def test_get_message(self):
+        file_name = '/testfile'
+        packet = AddFileCommitPacket(file_name)
+        msg = packet.get_message()
+        eq_(OP_ADD_FILE_COMMIT, msg['method'])
+        eq_(file_name, msg['name'])
+
+
+class TestAddFileCommitReplyPacket(object):
+    """the add file commit packet"""
+    def test_get_message(self):
+        state = RET_SUCCESS
+        info = 'test infomation'
+        packet = AddFileCommitReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_ADD_FILE_COMMIT_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+        state = RET_FAILURE
+        info = {'error id': 12, 'error msg': 'test error'}
+        packet = AddFileCommitReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_ADD_FILE_COMMIT_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+
+class TestGetFilePacket(object):
+    """the get file packet"""
+    def test_get_message(self):
+        file_name = '/testfile'
+        packet = GetFilePacket(file_name)
+        msg = packet.get_message()
+        eq_(OP_GET_FILE, msg['method'])
+        eq_(file_name, msg['name'])
+
+
+class TestGetFileReplyPacket(object):
+    """the get file packet"""
+    def test_get_message(self):
+        state = RET_SUCCESS
+        info = 'test infomation'
+        packet = GetFileReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_GET_FILE_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+        state = RET_FAILURE
+        info = {'error id': 12, 'error msg': 'test error'}
+        packet = GetFileReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_GET_FILE_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+
+class TestDeleteFilePacket(object):
+    """the delete file packet"""
+    def test_get_message(self):
+        file_name = '/testfile'
+        packet = DeleteFilePacket(file_name)
+        msg = packet.get_message()
+        eq_(OP_DELETE_FILE, msg['method'])
+        eq_(file_name, msg['name'])
+
+
+class TestDeleteFileReplyPacket(object):
+    """the delete file packet"""
+    def test_get_message(self):
+        state = RET_SUCCESS
+        info = 'test infomation'
+        packet = DeleteFileReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_DELETE_FILE_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+        state = RET_FAILURE
+        info = {'error id': 12, 'error msg': 'test error'}
+        packet = DeleteFileReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_DELETE_FILE_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+
+class TestStatFilePacket(object):
+    """the stat file packet"""
+    def test_get_message(self):
+        file_name = '/testfile'
+        packet = StatFilePacket(file_name)
+        msg = packet.get_message()
+        eq_(OP_STAT_FILE, msg['method'])
+        eq_(file_name, msg['name'])
+
+
+class TestStatFileReplyPacket(object):
+    """the stat file packet"""
+    def test_get_message(self):
+        state = RET_SUCCESS
+        info = 'test infomation'
+        packet = StatFileReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_STAT_FILE_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+        state = RET_FAILURE
+        info = {'error id': 12, 'error msg': 'test error'}
+        packet = StatFileReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_STAT_FILE_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+
+class TestGetObjPacket(object):
+    """the get Obj packet"""
+    def test_get_message(self):
+        obj_id = '/testfile_obj0'
+        packet = GetObjPacket(obj_id)
+        msg = packet.get_message()
+        eq_(OP_GET_OBJ, msg['method'])
+        eq_(obj_id, msg['object'])
+
+
+class TestGetObjReplyPacket(object):
+    """the get Obj packet"""
+    def test_get_message(self):
+        state = RET_SUCCESS
+        info = 'test infomation'
+        packet = GetObjReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_GET_OBJ_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+        state = RET_FAILURE
+        info = {'error id': 12, 'error msg': 'test error'}
+        packet = GetObjReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_GET_OBJ_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+
+class TestGetChkPacket(object):
+    """the get chk packet"""
+    def test_get_message(self):
+        chk_id = '/testfile_ob0_chk0'
+        packet = GetChkPacket(chk_id)
+        msg = packet.get_message()
+        eq_(OP_GET_CHK, msg['method'])
+        eq_(chk_id, msg['chunk'])
+
+
+class TestGetChkReplyPacket(object):
+    """the get chk packet"""
+    def test_get_message(self):
+        state = RET_SUCCESS
+        info = 'test infomation'
+        packet = GetChkReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_GET_CHK_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+        state = RET_FAILURE
+        info = {'error id': 12, 'error msg': 'test error'}
+        packet = GetChkReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_GET_CHK_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+
+class TestRepairChkPacket(object):
+    """the repair chk packet"""
+    def test_get_message(self):
+        chk_id = '/testfile_ob0_chk0'
+        packet = RepairChkPacket(chk_id)
+        msg = packet.get_message()
+        eq_(OP_REPAIR_CHK, msg['method'])
+        eq_(chk_id, msg['chunk'])
+
+
+class TestRepairChkReplyPacket(object):
+    """the repair chk packet"""
+    def test_get_message(self):
+        state = RET_SUCCESS
+        info = 'test infomation'
+        packet = RepairChkReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_REPAIR_CHK_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+        state = RET_FAILURE
+        info = {'error id': 12, 'error msg': 'test error'}
+        packet = RepairChkReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_REPAIR_CHK_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])

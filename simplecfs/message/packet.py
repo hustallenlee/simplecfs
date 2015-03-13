@@ -226,8 +226,8 @@ class ReportDSReplyPacket(object):
         """return add chunk packet message"""
         return self._message
 
-# ---- packet between client and mds ----
 
+# ---- packet between client and mds ----
 
 class MakeDirPacket(object):
     """
@@ -393,4 +393,270 @@ class ValidDirReplyPacket(object):
 
     def get_message(self):
         """return valid dir reply packet message"""
+        return self._message
+
+
+class AddFilePacket(object):
+    """
+    define the add file packet
+    """
+    def __init__(self, file_name, file_info):
+        """
+        @file_name: file name to add
+        @file_info: file information
+        """
+        self._message = {}
+        self._message['method'] = OP_ADD_FILE
+        self._message['name'] = file_name
+        self._message['info'] = file_info
+
+    def get_message(self):
+        """return add file packet message"""
+        return self._message
+
+
+class AddFileReplyPacket(object):
+    """add file reply packet"""
+    def __init__(self, state, info=''):
+        """
+        @state: RET_FAILURE/RET_SUCCESS/etc.
+        """
+        self._message = {}
+        self._message['method'] = OP_ADD_FILE_REPLY
+        self._message['state'] = state
+        self._message['info'] = info
+
+    def get_message(self):
+        """return add file packet message"""
+        return self._message
+
+
+class AddFileCommitPacket(object):
+    """
+    define the add file commit packet
+    """
+    def __init__(self, file_name):
+        """
+        @file_name: file name to commit
+        """
+        self._message = {}
+        self._message['method'] = OP_ADD_FILE_COMMIT
+        self._message['name'] = file_name
+
+    def get_message(self):
+        """return add file packet message"""
+        return self._message
+
+
+class AddFileCommitReplyPacket(object):
+    """add file commit reply packet"""
+    def __init__(self, state, info=''):
+        """
+        @state: RET_FAILURE/RET_SUCCESS/etc.
+        """
+        self._message = {}
+        self._message['method'] = OP_ADD_FILE_COMMIT_REPLY
+        self._message['state'] = state
+        self._message['info'] = info
+
+    def get_message(self):
+        """return add file packet message"""
+        return self._message
+
+
+class GetFilePacket(object):
+    """
+    define the Get file packet
+    """
+    def __init__(self, file_name):
+        """
+        @file_name: file name to get
+        """
+        self._message = {}
+        self._message['method'] = OP_GET_FILE
+        self._message['name'] = file_name
+
+    def get_message(self):
+        """return get file packet message"""
+        return self._message
+
+
+class GetFileReplyPacket(object):
+    """get file reply packet"""
+    def __init__(self, state, info=''):
+        """
+        @state: RET_FAILURE/RET_SUCCESS/etc.
+        """
+        self._message = {}
+        self._message['method'] = OP_GET_FILE_REPLY
+        self._message['state'] = state
+        self._message['info'] = info
+
+    def get_message(self):
+        """return get file packet message"""
+        return self._message
+
+
+class DeleteFilePacket(object):
+    """
+    define the delete file packet
+    """
+    def __init__(self, file_name):
+        """
+        @file_name: file name to delete
+        """
+        self._message = {}
+        self._message['method'] = OP_DELETE_FILE
+        self._message['name'] = file_name
+
+    def get_message(self):
+        """return delete file packet message"""
+        return self._message
+
+
+class DeleteFileReplyPacket(object):
+    """delete file reply packet"""
+    def __init__(self, state, info=''):
+        """
+        @state: RET_FAILURE/RET_SUCCESS/etc.
+        """
+        self._message = {}
+        self._message['method'] = OP_DELETE_FILE_REPLY
+        self._message['state'] = state
+        self._message['info'] = info
+
+    def get_message(self):
+        """return delete file packet message"""
+        return self._message
+
+
+class StatFilePacket(object):
+    """
+    define the stat file packet
+    """
+    def __init__(self, file_name):
+        """
+        @file_name: file name to stat
+        """
+        self._message = {}
+        self._message['method'] = OP_STAT_FILE
+        self._message['name'] = file_name
+
+    def get_message(self):
+        """return stat file packet message"""
+        return self._message
+
+
+class StatFileReplyPacket(object):
+    """stat file reply packet"""
+    def __init__(self, state, info=''):
+        """
+        @state: RET_FAILURE/RET_SUCCESS/etc.
+        """
+        self._message = {}
+        self._message['method'] = OP_STAT_FILE_REPLY
+        self._message['state'] = state
+        self._message['info'] = info
+
+    def get_message(self):
+        """return stat file packet message"""
+        return self._message
+
+
+class GetObjPacket(object):
+    """
+    define the get object packet
+    """
+    def __init__(self, object_id):
+        """
+        @object_id: object to get
+        """
+        self._message = {}
+        self._message['method'] = OP_GET_OBJ
+        self._message['object'] = object_id
+
+    def get_message(self):
+        """return get object packet message"""
+        return self._message
+
+
+class GetObjReplyPacket(object):
+    """get object reply packet"""
+    def __init__(self, state, info=''):
+        """
+        @state: RET_FAILURE/RET_SUCCESS/etc.
+        """
+        self._message = {}
+        self._message['method'] = OP_GET_OBJ_REPLY
+        self._message['state'] = state
+        self._message['info'] = info
+
+    def get_message(self):
+        """return get object packet message"""
+        return self._message
+
+
+class GetChkPacket(object):
+    """
+    define the get chunk packet
+    """
+    def __init__(self, chunk_id):
+        """
+        @chunk_id: chunk to get
+        """
+        self._message = {}
+        self._message['method'] = OP_GET_CHK
+        self._message['chunk'] = chunk_id
+
+    def get_message(self):
+        """return get chunk packet message"""
+        return self._message
+
+
+class GetChkReplyPacket(object):
+    """get chunk reply packet"""
+    def __init__(self, state, info=''):
+        """
+        @state: RET_FAILURE/RET_SUCCESS/etc.
+        """
+        self._message = {}
+        self._message['method'] = OP_GET_CHK_REPLY
+        self._message['state'] = state
+        self._message['info'] = info
+
+    def get_message(self):
+        """return get chunk packet message"""
+        return self._message
+
+
+class RepairChkPacket(object):
+    """
+    define the repair chunk packet
+    """
+    def __init__(self, chunk_id):
+        """
+        @chunk_id: chunk to repair
+        """
+        self._message = {}
+        self._message['method'] = OP_REPAIR_CHK
+        self._message['chunk'] = chunk_id
+
+    def get_message(self):
+        """return get chunk packet message"""
+        return self._message
+
+
+class RepairChkReplyPacket(object):
+    """repair chunk reply packet"""
+    def __init__(self, state, info=''):
+        """
+        @state: RET_FAILURE/RET_SUCCESS/etc.
+        """
+        self._message = {}
+        self._message['method'] = OP_REPAIR_CHK_REPLY
+        self._message['state'] = state
+        self._message['info'] = info
+
+    def get_message(self):
+        """return repair chunk packet message"""
         return self._message
