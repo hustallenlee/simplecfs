@@ -460,32 +460,32 @@ class TestAddFileCommitReplyPacket(object):
         eq_(info, msg['info'])
 
 
-class TestGetFilePacket(object):
-    """the get file packet"""
+class TestStatFilePacket(object):
+    """the stat file packet"""
     def test_get_message(self):
         file_name = '/testfile'
-        packet = GetFilePacket(file_name)
+        packet = StatFilePacket(file_name)
         msg = packet.get_message()
-        eq_(OP_GET_FILE, msg['method'])
+        eq_(OP_STAT_FILE, msg['method'])
         eq_(file_name, msg['name'])
 
 
-class TestGetFileReplyPacket(object):
-    """the get file packet"""
+class TestStatFileReplyPacket(object):
+    """the stat file packet"""
     def test_get_message(self):
         state = RET_SUCCESS
         info = 'test infomation'
-        packet = GetFileReplyPacket(state, info)
+        packet = StatFileReplyPacket(state, info)
         msg = packet.get_message()
-        eq_(OP_GET_FILE_REPLY, msg['method'])
+        eq_(OP_STAT_FILE_REPLY, msg['method'])
         eq_(state, msg['state'])
         eq_(info, msg['info'])
 
         state = RET_FAILURE
         info = {'error id': 12, 'error msg': 'test error'}
-        packet = GetFileReplyPacket(state, info)
+        packet = StatFileReplyPacket(state, info)
         msg = packet.get_message()
-        eq_(OP_GET_FILE_REPLY, msg['method'])
+        eq_(OP_STAT_FILE_REPLY, msg['method'])
         eq_(state, msg['state'])
         eq_(info, msg['info'])
 
@@ -520,32 +520,32 @@ class TestDeleteFileReplyPacket(object):
         eq_(info, msg['info'])
 
 
-class TestStatFilePacket(object):
-    """the stat file packet"""
+class TestGetFilePacket(object):
+    """the get file packet"""
     def test_get_message(self):
         file_name = '/testfile'
-        packet = StatFilePacket(file_name)
+        packet = GetFilePacket(file_name)
         msg = packet.get_message()
-        eq_(OP_STAT_FILE, msg['method'])
+        eq_(OP_GET_FILE, msg['method'])
         eq_(file_name, msg['name'])
 
 
-class TestStatFileReplyPacket(object):
-    """the stat file packet"""
+class TestGetFileReplyPacket(object):
+    """the get file packet"""
     def test_get_message(self):
         state = RET_SUCCESS
         info = 'test infomation'
-        packet = StatFileReplyPacket(state, info)
+        packet = GetFileReplyPacket(state, info)
         msg = packet.get_message()
-        eq_(OP_STAT_FILE_REPLY, msg['method'])
+        eq_(OP_GET_FILE_REPLY, msg['method'])
         eq_(state, msg['state'])
         eq_(info, msg['info'])
 
         state = RET_FAILURE
         info = {'error id': 12, 'error msg': 'test error'}
-        packet = StatFileReplyPacket(state, info)
+        packet = GetFileReplyPacket(state, info)
         msg = packet.get_message()
-        eq_(OP_STAT_FILE_REPLY, msg['method'])
+        eq_(OP_GET_FILE_REPLY, msg['method'])
         eq_(state, msg['state'])
         eq_(info, msg['info'])
 

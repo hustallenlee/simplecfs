@@ -464,36 +464,36 @@ class AddFileCommitReplyPacket(object):
         return self._message
 
 
-class GetFilePacket(object):
+class StatFilePacket(object):
     """
-    define the Get file packet
+    define the stat file packet
     """
     def __init__(self, file_name):
         """
-        @file_name: file name to get
+        @file_name: file name to stat
         """
         self._message = {}
-        self._message['method'] = OP_GET_FILE
+        self._message['method'] = OP_STAT_FILE
         self._message['name'] = file_name
 
     def get_message(self):
-        """return get file packet message"""
+        """return stat file packet message"""
         return self._message
 
 
-class GetFileReplyPacket(object):
-    """get file reply packet"""
+class StatFileReplyPacket(object):
+    """stat file reply packet"""
     def __init__(self, state, info=''):
         """
         @state: RET_FAILURE/RET_SUCCESS/etc.
         """
         self._message = {}
-        self._message['method'] = OP_GET_FILE_REPLY
+        self._message['method'] = OP_STAT_FILE_REPLY
         self._message['state'] = state
         self._message['info'] = info
 
     def get_message(self):
-        """return get file packet message"""
+        """return stat file packet message"""
         return self._message
 
 
@@ -530,36 +530,36 @@ class DeleteFileReplyPacket(object):
         return self._message
 
 
-class StatFilePacket(object):
+class GetFilePacket(object):
     """
-    define the stat file packet
+    define the Get file packet
     """
     def __init__(self, file_name):
         """
-        @file_name: file name to stat
+        @file_name: file name to get
         """
         self._message = {}
-        self._message['method'] = OP_STAT_FILE
+        self._message['method'] = OP_GET_FILE
         self._message['name'] = file_name
 
     def get_message(self):
-        """return stat file packet message"""
+        """return get file packet message"""
         return self._message
 
 
-class StatFileReplyPacket(object):
-    """stat file reply packet"""
+class GetFileReplyPacket(object):
+    """get file reply packet"""
     def __init__(self, state, info=''):
         """
         @state: RET_FAILURE/RET_SUCCESS/etc.
         """
         self._message = {}
-        self._message['method'] = OP_STAT_FILE_REPLY
+        self._message['method'] = OP_GET_FILE_REPLY
         self._message['state'] = state
         self._message['info'] = info
 
     def get_message(self):
-        """return stat file packet message"""
+        """return get file packet message"""
         return self._message
 
 
