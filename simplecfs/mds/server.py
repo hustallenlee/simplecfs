@@ -11,10 +11,12 @@ from simplecfs.mds.meta_storage import MDSStore
 from simplecfs.message.network_handler import recv_command, send_command
 from simplecfs.common.parameters import RET_SUCCESS, RET_FAILURE, OP_MAKE_DIR,\
     OP_REMOVE_DIR, OP_LIST_DIR, OP_STATUS_DIR, OP_VALID_DIR, OP_ADD_DS,\
-    OP_REPORT_DS, DS_CONNECTED, DS_BROKEN
+    OP_REPORT_DS, DS_CONNECTED, DS_BROKEN, OP_ADD_FILE, OP_ADD_FILE_COMMIT,\
+    OP_STAT_FILE, OP_DELETE_FILE
 from simplecfs.message.packet import MakeDirReplyPacket, RemoveDirReplyPacket,\
     ListDirReplyPacket, StatusDirReplyPacket, ValidDirReplyPacket,\
-    AddDSReplyPacket, ReportDSReplyPacket
+    AddDSReplyPacket, ReportDSReplyPacket, AddFileReplyPacket,\
+    AddFileCommitReplyPacket, StatFileReplyPacket, DeleteFileReplyPacket
 
 
 class MDSServer(object):
@@ -46,6 +48,10 @@ class MDSServer(object):
             OP_LIST_DIR: self._handle_list_dir,
             OP_STATUS_DIR: self._handle_status_dir,
             OP_VALID_DIR: self._handle_valid_dir,
+            OP_ADD_FILE: self._handle_add_file,
+            OP_ADD_FILE_COMMIT: self._handle_add_file_commit,
+            OP_STAT_FILE: self._handle_stat_file,
+            OP_DELETE_FILE: self._handle_delete_file,
         }
 
     def _check_ds(self, ds_ip, ds_port):
@@ -303,6 +309,73 @@ class MDSServer(object):
         reply = ValidDirReplyPacket(state, info)
         msg = reply.get_message()
         logging.info("valid dir return: %s", msg)
+        send_command(filed, msg)
+
+    def _handle_add_file(self, filed, args):
+        """handle client -> mds add file request, store to tmp table,
+        and response,
+        """
+        logging.info('handle add file request')
+
+        # get the file size, block size and code info
+        # filename = args['filename']
+        # filesize = args['filesize']
+        # block_size = args['block_size']
+        # code_info = args['code']
+
+        state = RET_SUCCESS
+        info = ''
+
+        # count the chunk size according to code info and block size(block*w)
+        # count the object size according to code info and chunk_size(k*chunk)
+        # count the object num according to object size and file size
+        # check the ds alive num, must > chunk num(k+m)
+        # assign the chunks to alive ds
+        # store file meta data to temp table
+
+        # response to client
+        reply = AddFileReplyPacket(state, info)
+        msg = reply.get_message()
+        logging.info("add file return: %s", msg)
+        send_command(filed, msg)
+
+    def _handle_add_file_commit(self, filed, args):
+        """handle client -> mds add file commit request, and response"""
+        logging.info('handle add file commit request')
+
+        state = RET_SUCCESS
+        info = ''
+
+        # reply to client
+        reply = AddFileCommitReplyPacket(state, info)
+        msg = reply.get_message()
+        logging.info("add file commit return: %s", msg)
+        send_command(filed, msg)
+
+    def _handle_stat_file(self, filed, args):
+        """handle client -> mds stat file request, and response"""
+        logging.info('handle stat file request')
+
+        state = RET_SUCCESS
+        info = ''
+
+        # reply to client
+        reply = StatFileReplyPacket(state, info)
+        msg = reply.get_message()
+        logging.info("stat file return: %s", msg)
+        send_command(filed, msg)
+
+    def _handle_delete_file(self, filed, args):
+        """handle client -> mds delete file request, and response"""
+        logging.info('handle delete file request')
+
+        state = RET_SUCCESS
+        info = ''
+
+        # reply to client
+        reply = DeleteFileReplyPacket(state, info)
+        msg = reply.get_message()
+        logging.info("delete file return: %s", msg)
         send_command(filed, msg)
 
     def _handle_conncetion(self, filed):

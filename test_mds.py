@@ -7,17 +7,50 @@ import argparse
 import ConfigParser as configparser
 import logging
 import logging.handlers
-
 import eventlet
 
 from simplecfs.message.packet import MakeDirPacket, RemoveDirPacket,\
     ListDirPacket, StatusDirPacket, ValidDirPacket, AddDSPacket,\
-    ReportDSPacket
+    ReportDSPacket, AddFilePacket, AddFileCommitPacket, StatFilePacket,\
+    DeleteFilePacket
 from simplecfs.message.network_handler import send_command, recv_command
 
 
 def get_new_connection(ip_='127.0.0.1', port=8000):
     return eventlet.connect((ip_, port))
+
+
+def init():
+    """init client"""
+    # handle command line argument
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--config',
+                        metavar='CONFIG_FILE',
+                        help='clientconfig file',
+                        default='./conf/client.cfg')
+    args = parser.parse_args()
+    config_file = args.config
+
+    # get config options
+    config = configparser.ConfigParser()
+    config.read(config_file)
+
+    # init logging
+    logger = logging.getLogger()  # get the 'root' logger
+    level = getattr(logging, config.get('log', 'log_level'))
+    logger.setLevel(level)
+    log_name = config.get('log', 'log_name')
+    log_max_bytes = config.getint('log', 'log_max_bytes')
+    log_file_num = config.getint('log', 'log_file_num')
+    handler = logging.handlers.RotatingFileHandler(log_name,
+                                                   maxBytes=log_max_bytes,
+                                                   backupCount=log_file_num)
+    log_format = logging.Formatter('%(levelname)-8s[%(asctime)s.%(msecs)d]'
+                                   '<%(module)s> %(funcName)s:%(lineno)d:'
+                                   ' %(message)s',
+                                   datefmt='%Y-%m-%d %H:%M:%S')
+    handler.setFormatter(log_format)
+    logger.addHandler(handler)
 
 
 def test_make_dir(dirname='/testdir/'):
@@ -184,37 +217,114 @@ def test_report_ds():
     sock_fd.close()
 
 
-def init():
-    """init client"""
-    # handle command line argument
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config',
-                        metavar='CONFIG_FILE',
-                        help='clientconfig file',
-                        default='./conf/client.cfg')
-    args = parser.parse_args()
-    config_file = args.config
+def test_add_file(filename='/testfile', fileinfo={}):
+    """
+    test function: add_file(filename, fileinfo)
+    filename should be absolute path,
+    finleinfo contain all the info in dict format:
+    fileinfo = {
+        "filename": filename,
+        "filesize": 1048576,
+        "block_size": 512,
+        "code": {
+            "type": "rs",  # "rs/crs/zcode/etc.",
+            "k": 2,
+            "m": 2,
+            "w": 8,
+        },
+    }
+    """
+    fileinfo = {
+        "filename": filename,
+        "filesize": 1048576,
+        "block_size": 512,
+        "code": {
+            "type": "rs",  # "rs/crs/zcode/etc.",
+            "k": 2,
+            "m": 2,
+            "w": 8,
+        },
+    }
 
-    # get config options
-    config = configparser.ConfigParser()
-    config.read(config_file)
+    print 'add file %s' % filename
+    print 'file info:'
+    print fileinfo
+    packet = AddFilePacket(filename, fileinfo)
+    msg = packet.get_message()
 
-    # init logging
-    logger = logging.getLogger()  # get the 'root' logger
-    level = getattr(logging, config.get('log', 'log_level'))
-    logger.setLevel(level)
-    log_name = config.get('log', 'log_name')
-    log_max_bytes = config.getint('log', 'log_max_bytes')
-    log_file_num = config.getint('log', 'log_file_num')
-    handler = logging.handlers.RotatingFileHandler(log_name,
-                                                   maxBytes=log_max_bytes,
-                                                   backupCount=log_file_num)
-    log_format = logging.Formatter('%(levelname)-8s[%(asctime)s.%(msecs)d]'
-                                   '<%(module)s> %(funcName)s:%(lineno)d:'
-                                   ' %(message)s',
-                                   datefmt='%Y-%m-%d %H:%M:%S')
-    handler.setFormatter(log_format)
-    logger.addHandler(handler)
+    sock = get_new_connection()
+    sock_fd = sock.makefile('rw')
+
+    logging.info('%s', msg)
+    send_command(sock_fd, msg)
+
+    recv = recv_command(sock_fd)
+    print recv
+    logging.info('recv: %s', recv)
+    sock_fd.close()
+
+
+def test_add_file_commit(filename='/testfile'):
+    """
+    test function: add_file_commit(filename)
+    filename should be absolute path,
+    """
+    print 'add file commit %s' % filename
+    packet = AddFileCommitPacket(filename)
+    msg = packet.get_message()
+
+    sock = get_new_connection()
+    sock_fd = sock.makefile('rw')
+
+    logging.info('%s', msg)
+    send_command(sock_fd, msg)
+
+    recv = recv_command(sock_fd)
+    print recv
+    logging.info('recv: %s', recv)
+    sock_fd.close()
+
+
+def test_stat_file(filename='/testfile'):
+    """
+    test function: stat_file(filename)
+    filename should be absolute path,
+    """
+    print 'stat file %s' % filename
+    packet = StatFilePacket(filename)
+    msg = packet.get_message()
+
+    sock = get_new_connection()
+    sock_fd = sock.makefile('rw')
+
+    logging.info('%s', msg)
+    send_command(sock_fd, msg)
+
+    recv = recv_command(sock_fd)
+    print recv
+    logging.info('recv: %s', recv)
+    sock_fd.close()
+
+
+def test_delete_file(filename='/testfile'):
+    """
+    test function: delete_file(filename)
+    filename should be absolute path,
+    """
+    print 'delete file %s' % filename
+    packet = DeleteFilePacket(filename)
+    msg = packet.get_message()
+
+    sock = get_new_connection()
+    sock_fd = sock.makefile('rw')
+
+    logging.info('%s', msg)
+    send_command(sock_fd, msg)
+
+    recv = recv_command(sock_fd)
+    print recv
+    logging.info('recv: %s', recv)
+    sock_fd.close()
 
 
 if __name__ == '__main__':
@@ -237,3 +347,8 @@ if __name__ == '__main__':
 
     # test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7000)
     # test_report_ds()
+
+    test_add_file()
+    test_add_file_commit()
+    test_stat_file()
+    test_delete_file()
