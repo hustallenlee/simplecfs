@@ -1,0 +1,2 @@
+include COPYING LICENSE README.md requirements.txt
+recursive-include ext *

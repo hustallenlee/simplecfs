@@ -44,6 +44,7 @@ setup(
     ],
     package_dir={'': SRC_DIR},
     packages=find_packages(SRC_DIR),
+    package_data={'': ['ext/*', ]},
     include_package_data=True,
     test_suite='nose.collector',
 )
