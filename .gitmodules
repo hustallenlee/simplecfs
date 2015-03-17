@@ -1,6 +1,6 @@
 [submodule "ext/librlc"]
 	path = ext/librlc
-	url = git@192.168.0.19:hustlijian/librlc.git
+	url = http://192.168.0.19/hustlijian/librlc.git
 [submodule "ext/gf-complete"]
 	path = ext/gf-complete
-	url = git@192.168.0.19:hustlijian/gf-complete.git
+	url = http://192.168.0.19/hustlijian/gf-complete.git
