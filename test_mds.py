@@ -238,6 +238,7 @@ def test_add_file(filename='/testfile', fileinfo={}):
         "filename": filename,
         "filesize": 1048576,
         "block_size": 512,
+        "packet_size": 1024,
         "code": {
             "type": "rs",  # "rs/crs/zcode/etc.",
             "k": 2,

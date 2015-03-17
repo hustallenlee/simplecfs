@@ -10,14 +10,14 @@ from nose.tools import eq_
 import os
 
 DATA_LENGTH = 6660000
-librlc = ctypes.CDLL('./ext/librlc/librlc.so')
+orig_data = os.urandom(DATA_LENGTH)
+librlc = ctypes.CDLL('ext/librlc/librlc.so')
 
 
 def test_rs(k=4, m=2, w=8, packet_size=1024):
     """test the rs code"""
     # encode
     data_len = DATA_LENGTH
-    orig_data = os.urandom(data_len)
     print 'data len %d' % data_len
     encoded_data = ctypes.pointer(ctypes.c_char_p())
     encoded_parity = ctypes.pointer(ctypes.c_char_p())
@@ -92,7 +92,6 @@ def test_rs(k=4, m=2, w=8, packet_size=1024):
 def test_crs(k=4, m=2, w=4, packet_size=1024):
     # encode
     data_len = DATA_LENGTH
-    orig_data = os.urandom(data_len)
     print 'data len %d' % data_len
     encoded_data = ctypes.pointer(ctypes.c_char_p())
     encoded_parity = ctypes.pointer(ctypes.c_char_p())
@@ -175,7 +174,6 @@ def test_zcode(k=4, m=2, packet_size=1024):
 
     # encode
     data_len = DATA_LENGTH
-    orig_data = os.urandom(data_len)
     print 'data len %d' % data_len
     encoded_data = ctypes.pointer(ctypes.c_char_p())
     encoded_parity = ctypes.pointer(ctypes.c_char_p())
