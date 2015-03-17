@@ -8,21 +8,36 @@ a simple coded file system.
 2. librlc
 
 ## Install
-`git clone git@192.168.0.19:root/simplecfs.git`
+    
+    git clone --recursive http://192.168.0.19/hustlijian/simplecfs.git
+    
+    cd ext/gf-complete
+	./autogen.sh
+	./configure
+	make
+	cp src/.libs/libgf_complete.a ../librlc/gf_complete.a
+
+	cd ../librlc
+	make
 
 ## Test
 
-`python setup.py test`
+    python setup.py test
 
 ## Run
 
-### DS
-`python ./ds.py`
-
 ### MDS
-`redis-server # start the redis-server`
+
+    redis-server # start the redis-server
+
+    python ./mds.py
+
+### DS
+
+    python ./ds.py
 
 ### Client
-`python ./client.py`
+
+    python ./client.py
 
 ## Example
