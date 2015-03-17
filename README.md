@@ -10,6 +10,7 @@ a simple coded file system.
 ## Install
     
     git clone --recursive http://192.168.0.19/hustlijian/simplecfs.git
+    cd simplecfs  # change directory to simplecfs
     
     cd ext/gf-complete
 	./autogen.sh
@@ -19,6 +20,8 @@ a simple coded file system.
 
 	cd ../librlc
 	make
+
+    cd ../../  # back to simplecfs directory
 
 ## Test
 
