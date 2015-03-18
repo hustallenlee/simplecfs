@@ -9,6 +9,7 @@ import logging
 import logging.handlers
 import eventlet
 
+from simplecfs.common.parameters import CODE_RS
 from simplecfs.message.packet import MakeDirPacket, RemoveDirPacket,\
     ListDirPacket, StatusDirPacket, ValidDirPacket, AddDSPacket,\
     ReportDSPacket, AddFilePacket, AddFileCommitPacket, StatFilePacket,\
@@ -235,15 +236,14 @@ def test_add_file(filename='/testfile', fileinfo={}):
     }
     """
     fileinfo = {
-        "filename": filename,
-        "filesize": 1048576,
-        "block_size": 512,
-        "packet_size": 1024,
+        "filesize": 20480,
+        "block_size": 1024,
         "code": {
-            "type": "rs",  # "rs/crs/zcode/etc.",
+            "type": CODE_RS,  # "rs/crs/zcode/etc.",
             "k": 2,
             "m": 2,
             "w": 8,
+            "packet_size": 512,
         },
     }
 
@@ -346,7 +346,12 @@ if __name__ == '__main__':
     # test_status_dir(dirname)
     # test_valid_dir(dirname)
 
-    # test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7000)
+    test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7000)
+    test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7001)
+    test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7002)
+    test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7003)
+    test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7004)
+    test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7005)
     # test_report_ds()
 
     test_add_file()

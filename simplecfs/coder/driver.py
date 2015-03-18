@@ -434,8 +434,6 @@ class ZDriver(object):
                     self.k = int(value)
                 elif key == 'm':
                     self.m = int(value)
-                elif key == 'w':
-                    self.w = int(value)
                 elif key == 'packet_size':
                     self.packet_size = int(value)
                 elif key == 'block_size':

@@ -9,6 +9,11 @@ RET_SUCCESS = True
 # failed operation return
 RET_FAILURE = False
 
+# ==== code define ====
+CODE_RS = 'RS'
+CODE_CRS = 'CRS'
+CODE_Z = 'ZCODE'
+
 # ==== DS defined parameters ====
 
 # ds state

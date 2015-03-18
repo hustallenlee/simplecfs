@@ -5,7 +5,7 @@ unit test for meta tables
 from nose.tools import eq_
 
 from simplecfs.mds.meta_table import dir_key, sub_key, file_key, obj_key,\
-    chk_key, ds_key, ds_alive_key
+    chk_key, ds_key, ds_alive_key, tmp_key
 
 
 def test_dir_key():
@@ -48,3 +48,9 @@ def test_ds_key():
 def test_ds_alive_key():
     key = ds_alive_key()
     eq_(key, 'ds_alive')
+
+
+def test_tmp_key():
+    filename = '/testfile'
+    key = tmp_key(filename)
+    eq_(key, 'tmp:/testfile')

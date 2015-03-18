@@ -10,6 +10,7 @@ OBJ_PREFIX = 'obj:'     # object
 CHK_PREFIX = 'chk:'     # chunk
 DS_PREFIX = 'ds:'       # ds
 DS_ALIVE = 'ds_alive'   # ds alive list
+TMP_PREFIX = 'tmp:'     # temp file
 
 
 def dir_key(dirname):
@@ -44,3 +45,8 @@ def ds_key(ip, port):
 
 def ds_alive_key():
     return DS_ALIVE
+
+
+def tmp_key(filename):
+    """use file anme to get the tmp key"""
+    return TMP_PREFIX + filename

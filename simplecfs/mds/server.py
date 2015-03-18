@@ -6,17 +6,19 @@ import eventlet
 import logging
 import time
 import socket
+import random
 
 from simplecfs.mds.meta_storage import MDSStore
 from simplecfs.message.network_handler import recv_command, send_command
 from simplecfs.common.parameters import RET_SUCCESS, RET_FAILURE, OP_MAKE_DIR,\
     OP_REMOVE_DIR, OP_LIST_DIR, OP_STATUS_DIR, OP_VALID_DIR, OP_ADD_DS,\
     OP_REPORT_DS, DS_CONNECTED, DS_BROKEN, OP_ADD_FILE, OP_ADD_FILE_COMMIT,\
-    OP_STAT_FILE, OP_DELETE_FILE
+    OP_STAT_FILE, OP_DELETE_FILE, CODE_CRS, CODE_RS, CODE_Z
 from simplecfs.message.packet import MakeDirReplyPacket, RemoveDirReplyPacket,\
     ListDirReplyPacket, StatusDirReplyPacket, ValidDirReplyPacket,\
     AddDSReplyPacket, ReportDSReplyPacket, AddFileReplyPacket,\
     AddFileCommitReplyPacket, StatFileReplyPacket, DeleteFileReplyPacket
+from simplecfs.coder.driver import RSDriver, CRSDriver, ZDriver
 
 
 class MDSServer(object):
@@ -36,9 +38,11 @@ class MDSServer(object):
         redis_host = config.get('redis', 'host')
         redis_port = config.getint('redis', 'port')
         redis_db = config.getint('redis', 'db')
+        expire_time = config.getint('redis', 'expire_time')
         logging.info('set redis host:ip db: %s:%d %d', redis_host,
                      redis_port, redis_db)
-        self.mds = MDSStore(host=redis_host, port=redis_port, db=redis_db)
+        self.mds = MDSStore(host=redis_host, port=redis_port, db=redis_db,
+                            expire_time=expire_time)
 
         self._handlers = {
             OP_ADD_DS: self._handle_add_ds,
@@ -52,6 +56,12 @@ class MDSServer(object):
             OP_ADD_FILE_COMMIT: self._handle_add_file_commit,
             OP_STAT_FILE: self._handle_stat_file,
             OP_DELETE_FILE: self._handle_delete_file,
+        }
+
+        self._code_map = {
+            CODE_RS: RSDriver,
+            CODE_CRS: CRSDriver,
+            CODE_Z: ZDriver,
         }
 
     def _check_ds(self, ds_ip, ds_port):
@@ -311,27 +321,119 @@ class MDSServer(object):
         logging.info("valid dir return: %s", msg)
         send_command(filed, msg)
 
+    def _get_code_driver(self, args):
+        """return a init code driver according to args """
+        block_size = int(args['block_size'])
+        code_info = args['code']
+        code_type = code_info['type']
+
+        code = None
+        if code_type == CODE_RS:
+            logging.info('code type rs')
+            k = int(code_info['k'])
+            m = int(code_info['m'])
+            w = int(code_info['w'])
+            packet_size = int(code_info['packet_size'])
+            code = RSDriver(k=k, m=m, w=w, packet_size=packet_size,
+                            block_size=block_size)
+        elif code_type == CODE_CRS:
+            logging.info('code type crs')
+            k = int(code_info['k'])
+            m = int(code_info['m'])
+            w = int(code_info['w'])
+            packet_size = int(code_info['packet_size'])
+            code = CRSDriver(k=k, m=m, w=w, packet_size=packet_size,
+                             block_size=block_size)
+        elif code_type == CODE_Z:
+            logging.info('code type zcode')
+            k = int(code_info['k'])
+            m = int(code_info['m'])
+            packet_size = int(code_info['packet_size'])
+            code = ZDriver(k=k, m=m, packet_size=packet_size,
+                           block_size=block_size)
+        return code
+
+    def _assign_ds(self, alive_ds, object_num, chunk_num):
+        """assign ds to chunks
+        alive_ds: ["ip:port", "ip:port", ... ]
+        object_num: 4(int)
+        chunk_num: 4(int)
+        return: [
+                    ["ip:port", "ip:port", ..., ],
+                    ["ip:port", "ip:port", ..., ],
+                    ...,
+                ]
+        """
+        objects = []
+        for i in range(0, object_num):
+            chunks = random.sample(alive_ds, chunk_num)
+            objects.append(chunks)
+
+        return objects
+
     def _handle_add_file(self, filed, args):
         """handle client -> mds add file request, store to tmp table,
         and response,
         """
         logging.info('handle add file request')
 
-        # get the file size, block size and code info
-        # filename = args['filename']
-        # filesize = args['filesize']
-        # block_size = args['block_size']
-        # code_info = args['code']
-
         state = RET_SUCCESS
         info = ''
 
-        # count the chunk size according to code info and block size(block*w)
-        # count the object size according to code info and chunk_size(k*chunk)
-        # count the object num according to object size and file size
-        # check the ds alive num, must > chunk num(k+m)
-        # assign the chunks to alive ds
-        # store file meta data to temp table
+        # get the file name, file size
+        filename = args['name']
+        fileinfo = args['info']
+        # TODO: check file exists or not
+
+        try:
+            # set the code driver by fileinfo
+            code = self._get_code_driver(fileinfo)
+        except (KeyError, ValueError, AssertionError):
+            logging.exception('set code driver error')
+            state = RET_FAILURE
+            info = 'code info error'
+
+        file_info = {}
+        if state == RET_SUCCESS:
+            # count the object num according to object size and file size
+            object_size = code.get_object_size()
+            filesize = int(fileinfo['filesize'])
+            object_num = int(filesize/object_size)
+            if filesize % object_size:   # add puls one
+                object_num += 1
+            chunk_num = code.get_chunk_num()
+
+            file_info['filename'] = filename
+            file_info['filesize'] = filesize
+            file_info['code'] = fileinfo['code']
+            file_info['object_num'] = object_num
+            file_info['object_size'] = object_size
+            file_info['block_size'] = code.get_block_size()
+            file_info['chunk_size'] = code.get_chunk_size()
+            file_info['chunk_num'] = chunk_num
+
+            # check the ds alive num, must > chunk num(k+m)
+            alive_ds = self.mds.get_alive_ds()
+            if len(alive_ds) < code.get_chunk_num():
+                logging.error('alive ds num (%d) must not less than '
+                              'chunk num (%d) in one stripe',
+                              len(alive_ds), code.get_chunk_num())
+                state = RET_FAILURE
+                info = 'alive ds num less than chunk num'
+
+            # assign the chunks to alive ds
+            objects = self._assign_ds(alive_ds, object_num, chunk_num)
+            file_info['objects'] = objects
+            if not objects:
+                logging.error('assign ds failed')
+                state = RET_FAILURE
+
+        if state == RET_SUCCESS:
+            # store file meta data to temp table
+            self.mds.addtmp(filename, file_info)
+
+        if state == RET_SUCCESS:
+            info = file_info
 
         # response to client
         reply = AddFileReplyPacket(state, info)

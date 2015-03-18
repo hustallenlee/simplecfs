@@ -6,13 +6,14 @@ import redis
 import logging
 import json
 
-from simplecfs.mds.meta_table import dir_key, sub_key, ds_key, ds_alive_key
+from simplecfs.mds.meta_table import dir_key, sub_key, ds_key, ds_alive_key,\
+    tmp_key
 from simplecfs.common.parameters import DS_BROKEN, RET_SUCCESS
 
 
 class MDSStore(object):
     '''class to handle meta data operation'''
-    def __init__(self, host='127.0.0.1', port=6379, db=0):
+    def __init__(self, host='127.0.0.1', port=6379, db=0, expire_time=1800):
         '''init storage'''
         try:
             self.r = redis.StrictRedis(host, port, db)
@@ -22,6 +23,8 @@ class MDSStore(object):
         # init root
         if not self.hasdir('/'):
             self.set(dir_key('/'), '')  # add root directory
+
+        self.expire_time = expire_time
 
     def set(self, key, value):
         '''set data'''
@@ -43,6 +46,11 @@ class MDSStore(object):
     def exists(self, key):
         '''exists a key'''
         ret = self.r.exists(key)
+        return ret
+
+    def expire(self, key, timeout):
+        '''expire a key for timeout'''
+        ret = self.r.expire(key, timeout)
         return ret
 
     def mkdir(self, dirname, dirinfo):
@@ -200,4 +208,31 @@ class MDSStore(object):
     def getds(self, ds_ip, ds_port):
         logging.info('meta getds: ip:%s port:%d', ds_ip, ds_port)
         key = ds_key(ds_ip, ds_port)
+        return self.get(key)
+
+    def addtmp(self, filename, fileinfo):
+        logging.info('meta addtmp filename %s', filename)
+
+        key = tmp_key(filename)
+        ret = self.set(key, fileinfo)
+
+        if ret == RET_SUCCESS:
+            ret = self.expire(key, self.expire_time)
+
+        return ret
+
+    def hastmp(self, filename):
+        logging.info('meta hastmp: file %s', filename)
+        return self.exists(tmp_key(filename))
+
+    def deltmp(self, filename):
+        logging.info('meta deltmp: file %s', filename)
+        key = tmp_key(filename)
+        self.delete(key)
+
+        return True
+
+    def gettmp(self, filename):
+        logging.info('meta gettmp: file %s', filename)
+        key = tmp_key(filename)
         return self.get(key)

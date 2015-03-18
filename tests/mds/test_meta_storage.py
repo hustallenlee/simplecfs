@@ -168,3 +168,30 @@ class TestMDSStore(object):
 
         ret = mds.hasds(ds_ip, ds_port)
         eq_(ret, False)
+
+    def test_tmp(self):
+        # connet to redis
+        mds = MDSStore(host='127.0.0.1', port=6379, db=0)
+
+        tmpname = '/mytesttmp'
+        tmpinfo = {
+            'parent_tmp': '/',
+            'create_time': '2015-03-04'
+        }
+        ret = mds.addtmp(tmpname, tmpinfo)
+        eq_(ret, True)
+
+        ret = mds.hastmp(tmpname)
+        eq_(ret, True)
+
+        ret = mds.gettmp(tmpname)
+        eq_(tmpinfo, ret)
+
+        ret = mds.hastmp('/nosuchtmp/')
+        eq_(ret, False)
+
+        ret = mds.deltmp(tmpname)
+        eq_(ret, True)
+
+        ret = mds.hastmp(tmpname)
+        eq_(ret, False)

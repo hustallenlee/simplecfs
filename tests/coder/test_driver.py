@@ -196,7 +196,7 @@ class TestZDriver(object):
         eq_(z.k+z.m, z.get_chunk_num())
         eq_(32768, z.get_object_size())
 
-        z = ZDriver(k=3, m=3, w=8, packet_size=1024, block_size=1024)
+        z = ZDriver(k=3, m=3, packet_size=1024, block_size=1024)
         eq_(3, z.k)
         eq_(3, z.m)
         eq_(9, z.r)
