@@ -5,7 +5,7 @@ unit test for code drivers
 import os
 from nose.tools import eq_
 
-from simplecfs.coder.driver import RSDriver
+from simplecfs.coder.driver import RSDriver, CRSDriver
 from simplecfs.common.parameters import RET_SUCCESS
 
 
@@ -92,3 +92,89 @@ class TestRSDriver(object):
         eq_(encoded_data[(rs.k-1)*rs.block_size:],
             repair_data[:rs.block_size])
         eq_(encoded_parity[rs.block_size:], repair_data[rs.block_size:])
+
+
+class TestCRSDriver(object):
+    """class to test crs code driver"""
+    def test_init(self):
+        """test init"""
+        crs = CRSDriver()
+        eq_(4, crs.k)
+        eq_(2, crs.m)
+        eq_(4, crs.w)
+        eq_(512, crs.packet_size)
+        eq_(1024, crs.block_size)
+        eq_(4096, crs.chunk_size)
+        eq_(crs.block_size, crs.get_block_size())
+        eq_(crs.block_size*crs.w, crs.get_chunk_size())
+        eq_(crs.k+crs.m, crs.get_chunk_num())
+        eq_(16384, crs.get_object_size())
+
+        crs = CRSDriver(k=3, m=3, w=8, packet_size=1024, block_size=1024)
+        eq_(3, crs.k)
+        eq_(3, crs.m)
+        eq_(8, crs.w)
+        eq_(1024, crs.packet_size)
+        eq_(1024, crs.block_size)
+        eq_(8192, crs.chunk_size)
+        eq_(1024, crs.get_block_size())
+        eq_(8192, crs.get_chunk_size())
+        eq_(6, crs.get_chunk_num())
+        eq_(24576, crs.get_object_size())
+
+    def test_code(self):
+        crs = CRSDriver()
+        data_len = crs.get_object_size()
+        orig_data = os.urandom(data_len)
+
+        # test encodE
+        (state, chunks) = crs.encode(orig_data)
+        eq_(state, RET_SUCCESS)
+
+        encoded_data = chunks[0]
+        eq_(encoded_data, orig_data)
+
+        encoded_parity = chunks[1]
+
+        # test decode
+        available_data = []
+        available_list = []
+        list_len = crs.k * crs.w
+        for i in range(0, list_len-1):
+            available_data.append(
+                encoded_data[i*crs.block_size:(i+1)*crs.block_size])
+            available_list.append(i)
+        available_data.append(encoded_parity[:crs.block_size])
+        available_list.append(list_len)
+
+        (state, decoded_data) = crs.decode(available_data, available_list)
+        eq_(state, RET_SUCCESS)
+        eq_(decoded_data, orig_data)
+
+        # test repair
+        repair_indexes = []
+        repair_indexes.append(list_len-1)
+        for i in range(1, crs.m*crs.w):
+            repair_indexes.append(i+list_len)
+
+        exclude_indexes = []
+        (state, available_list) = crs.repair_needed_blocks(repair_indexes,
+                                                           exclude_indexes)
+        eq_(state, RET_SUCCESS)
+
+        available_data = []
+        for i in available_list:
+            if i < list_len:
+                available_data.append(
+                    encoded_data[i*crs.block_size:(i+1)*crs.block_size])
+            else:
+                available_data.append(
+                    encoded_parity[(i-list_len)*crs.block_size:
+                                   (i-list_len+1)*crs.block_size])
+
+        (state, repair_data) = crs.repair(available_data,
+                                          available_list, repair_indexes)
+        eq_(state, RET_SUCCESS)
+        eq_(encoded_data[(list_len-1)*crs.block_size:],
+            repair_data[:crs.block_size])
+        eq_(encoded_parity[crs.block_size:], repair_data[crs.block_size:])
