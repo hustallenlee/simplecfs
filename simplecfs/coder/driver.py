@@ -39,6 +39,8 @@ class RSDriver(object):
         except (TypeError, ValueError):
             logging.exception('invalid args for DSDriver init')
 
+        assert self.block_size >= self.packet_size
+
         self.chunk_size = self.block_size
         self.rs = ctypes.CDLL('ext/librlc/librlc.so')
 
