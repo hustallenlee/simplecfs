@@ -5,7 +5,7 @@ unit test for code drivers
 import os
 from nose.tools import eq_
 
-from simplecfs.coder.driver import RSDriver, CRSDriver
+from simplecfs.coder.driver import RSDriver, CRSDriver, ZDriver
 from simplecfs.common.parameters import RET_SUCCESS
 
 
@@ -178,3 +178,83 @@ class TestCRSDriver(object):
         eq_(encoded_data[(list_len-1)*crs.block_size:],
             repair_data[:crs.block_size])
         eq_(encoded_parity[crs.block_size:], repair_data[crs.block_size:])
+
+
+class TestZDriver(object):
+    """class to test zcode driver"""
+    def test_init(self):
+        """test init"""
+        z = ZDriver()
+        eq_(4, z.k)
+        eq_(2, z.m)
+        eq_(8, z.r)
+        eq_(512, z.packet_size)
+        eq_(1024, z.block_size)
+        eq_(8192, z.chunk_size)
+        eq_(z.block_size, z.get_block_size())
+        eq_(z.block_size*z.r, z.get_chunk_size())
+        eq_(z.k+z.m, z.get_chunk_num())
+        eq_(32768, z.get_object_size())
+
+        z = ZDriver(k=3, m=3, w=8, packet_size=1024, block_size=1024)
+        eq_(3, z.k)
+        eq_(3, z.m)
+        eq_(9, z.r)
+        eq_(1024, z.packet_size)
+        eq_(1024, z.block_size)
+        eq_(9216, z.chunk_size)
+        eq_(1024, z.get_block_size())
+        eq_(9216, z.get_chunk_size())
+        eq_(6, z.get_chunk_num())
+        eq_(27648, z.get_object_size())
+
+    def test_code(self):
+        z = ZDriver()
+        data_len = z.get_object_size()
+        orig_data = os.urandom(data_len)
+
+        # test encode
+        (state, chunks) = z.encode(orig_data)
+        eq_(state, RET_SUCCESS)
+
+        encoded_data = chunks[0]
+        eq_(encoded_data, orig_data)
+
+        encoded_parity = chunks[1]
+
+        # test decode
+        available_data = []
+        available_list = []
+
+        list_len = z.k * z.r
+        for i in range(0, list_len):
+            available_data.append(
+                encoded_data[i*z.block_size:(i+1)*z.block_size])
+            available_list.append(i)
+
+        (state, decoded_data) = z.decode(available_data, available_list)
+        eq_(state, RET_SUCCESS)
+        eq_(decoded_data, orig_data)
+
+        # test repair
+        repair_chunk = 0
+
+        exclude_indexes = []
+        (state, available_list) = z.repair_needed_blocks(repair_chunk,
+                                                         exclude_indexes)
+        eq_(state, RET_SUCCESS)
+
+        available_data = []
+        for i in available_list:
+            if i < list_len:
+                available_data.append(
+                    encoded_data[i*z.block_size:(i+1)*z.block_size])
+            else:
+                available_data.append(
+                    encoded_parity[(i-list_len)*z.block_size:
+                                   (i-list_len+1)*z.block_size])
+
+        (state, repair_data) = z.repair(available_data,
+                                        available_list, repair_chunk)
+        eq_(state, RET_SUCCESS)
+        eq_(encoded_data[:z.chunk_size], repair_data)
