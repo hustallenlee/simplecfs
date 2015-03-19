@@ -638,3 +638,35 @@ class TestRepairChkReplyPacket(object):
         eq_(OP_REPAIR_CHK_REPLY, msg['method'])
         eq_(state, msg['state'])
         eq_(info, msg['info'])
+
+
+class TestRepairChkCommitPacket(object):
+    """the repair chk commit packet"""
+    def test_get_message(self):
+        chk_id = '/testfile_ob0_chk0'
+        ds_id = '127.0.0.1:700'
+        packet = RepairChkCommitPacket(chk_id, ds_id)
+        msg = packet.get_message()
+        eq_(OP_REPAIR_CHK_COMMIT, msg['method'])
+        eq_(chk_id, msg['chunk'])
+        eq_(ds_id, msg['ds_id'])
+
+
+class TestRepairChkCommitReplyPacket(object):
+    """the repair chk commit packet"""
+    def test_get_message(self):
+        state = RET_SUCCESS
+        info = 'test infomation'
+        packet = RepairChkCommitReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_REPAIR_CHK_COMMIT_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])
+
+        state = RET_FAILURE
+        info = {'error id': 12, 'error msg': 'test error'}
+        packet = RepairChkCommitReplyPacket(state, info)
+        msg = packet.get_message()
+        eq_(OP_REPAIR_CHK_COMMIT_REPLY, msg['method'])
+        eq_(state, msg['state'])
+        eq_(info, msg['info'])

@@ -660,3 +660,38 @@ class RepairChkReplyPacket(object):
     def get_message(self):
         """return repair chunk packet message"""
         return self._message
+
+
+class RepairChkCommitPacket(object):
+    """
+    define the repair chunk commit packet
+    """
+    def __init__(self, chunk_id, ds_id):
+        """
+        @chunk_id: chunk to repair
+        @ds_id: chunk new ds
+        """
+        self._message = {}
+        self._message['method'] = OP_REPAIR_CHK_COMMIT
+        self._message['chunk'] = chunk_id
+        self._message['ds_id'] = ds_id
+
+    def get_message(self):
+        """return get chunk packet message"""
+        return self._message
+
+
+class RepairChkCommitReplyPacket(object):
+    """repair chunk commit reply packet"""
+    def __init__(self, state, info=''):
+        """
+        @state: RET_FAILURE/RET_SUCCESS/etc.
+        """
+        self._message = {}
+        self._message['method'] = OP_REPAIR_CHK_COMMIT_REPLY
+        self._message['state'] = state
+        self._message['info'] = info
+
+    def get_message(self):
+        """return repair chunk commit packet message"""
+        return self._message

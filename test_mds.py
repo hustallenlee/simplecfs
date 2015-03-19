@@ -9,11 +9,12 @@ import logging
 import logging.handlers
 import eventlet
 
-from simplecfs.common.parameters import CODE_RS, DS_CONNECTED, DS_BROKEN
+from simplecfs.common.parameters import CODE_RS, DS_CONNECTED  # DS_BROKEN
 from simplecfs.message.packet import MakeDirPacket, RemoveDirPacket,\
     ListDirPacket, StatusDirPacket, ValidDirPacket, AddDSPacket,\
     ReportDSPacket, AddFilePacket, AddFileCommitPacket, StatFilePacket,\
-    DeleteFilePacket
+    DeleteFilePacket, GetFilePacket, GetObjPacket, GetChkPacket,\
+    RepairChkPacket, RepairChkCommitPacket
 from simplecfs.message.network_handler import send_command, recv_command
 
 
@@ -327,6 +328,108 @@ def test_delete_file(filename='/testfile'):
     sock_fd.close()
 
 
+def test_get_file(filepath='/testfile'):
+    """
+    test function: get_file(filepath)
+    filepath should be absolute path,
+    """
+    print 'get file %s' % filepath
+    packet = GetFilePacket(filepath)
+    msg = packet.get_message()
+
+    sock = get_new_connection()
+    sock_fd = sock.makefile('rw')
+
+    logging.info('%s', msg)
+    send_command(sock_fd, msg)
+
+    recv = recv_command(sock_fd)
+    print recv
+    logging.info('recv: %s', recv)
+    sock_fd.close()
+
+
+def test_get_obj(obj_id='/testfile_obj0'):
+    """
+    test function: get_obj(obj_id)
+    """
+    print 'get obj %s' % obj_id
+    packet = GetObjPacket(obj_id)
+    msg = packet.get_message()
+
+    sock = get_new_connection()
+    sock_fd = sock.makefile('rw')
+
+    logging.info('%s', msg)
+    send_command(sock_fd, msg)
+
+    recv = recv_command(sock_fd)
+    print recv
+    logging.info('recv: %s', recv)
+    sock_fd.close()
+
+
+def test_get_chk(chk_id='/testfile_obj0_chk0'):
+    """
+    test function: get_chk(chk_id)
+    """
+    print 'get chk %s' % chk_id
+    packet = GetChkPacket(chk_id)
+    msg = packet.get_message()
+
+    sock = get_new_connection()
+    sock_fd = sock.makefile('rw')
+
+    logging.info('%s', msg)
+    send_command(sock_fd, msg)
+
+    recv = recv_command(sock_fd)
+    print recv
+    logging.info('recv: %s', recv)
+    sock_fd.close()
+
+
+def test_repair_chk(chk_id='/testfile_obj0_chk0'):
+    """
+    test function: repair_chk(chk_id)
+    """
+    print 'repair chk %s' % chk_id
+    packet = RepairChkPacket(chk_id)
+    msg = packet.get_message()
+
+    sock = get_new_connection()
+    sock_fd = sock.makefile('rw')
+
+    logging.info('%s', msg)
+    send_command(sock_fd, msg)
+
+    recv = recv_command(sock_fd)
+    print recv
+    logging.info('recv: %s', recv)
+    sock_fd.close()
+
+
+def test_repair_chk_commit(chk_id='/testfile_obj0_chk0',
+                           ds_id='127.0.0.1:7000'):
+    """
+    test function: repair_chk_commit(chk_id, ds_id)
+    """
+    print 'repair chk commit %s %s' % (chk_id, ds_id)
+    packet = RepairChkCommitPacket(chk_id, ds_id)
+    msg = packet.get_message()
+
+    sock = get_new_connection()
+    sock_fd = sock.makefile('rw')
+
+    logging.info('%s', msg)
+    send_command(sock_fd, msg)
+
+    recv = recv_command(sock_fd)
+    print recv
+    logging.info('recv: %s', recv)
+    sock_fd.close()
+
+
 if __name__ == '__main__':
     init()
 
@@ -347,7 +450,7 @@ if __name__ == '__main__':
 
     # test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7000)
     # test_report_ds()
-    test_report_ds(ds_ip='127.0.0.1', ds_port=7001, status=DS_BROKEN)
+    # test_report_ds(ds_ip='127.0.0.1', ds_port=7001, status=DS_BROKEN)
 
     # test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7001)
     # test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7002)
@@ -358,3 +461,9 @@ if __name__ == '__main__':
     # test_add_file_commit()
     # test_stat_file()
     # test_delete_file()
+
+    # test_get_file()
+    # test_get_obj()
+    # test_get_chk()
+    # test_repair_chk()
+    # test_repair_chk_commit()
