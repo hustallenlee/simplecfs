@@ -13,7 +13,7 @@ from simplecfs.message.network_handler import recv_command, send_command
 from simplecfs.common.parameters import RET_SUCCESS, RET_FAILURE, OP_MAKE_DIR,\
     OP_REMOVE_DIR, OP_LIST_DIR, OP_STATUS_DIR, OP_VALID_DIR, OP_ADD_DS,\
     OP_REPORT_DS, DS_CONNECTED, DS_BROKEN, OP_ADD_FILE, OP_ADD_FILE_COMMIT,\
-    OP_STAT_FILE, OP_DELETE_FILE, CODE_CRS, CODE_RS, CODE_Z
+    OP_STAT_FILE, OP_DELETE_FILE, CODE_CRS, CODE_RS, CODE_Z, CHUNK_OK
 from simplecfs.message.packet import MakeDirReplyPacket, RemoveDirReplyPacket,\
     ListDirReplyPacket, StatusDirReplyPacket, ValidDirReplyPacket,\
     AddDSReplyPacket, ReportDSReplyPacket, AddFileReplyPacket,\
@@ -441,12 +441,89 @@ class MDSServer(object):
         logging.info("add file return: %s", msg)
         send_command(filed, msg)
 
+    def _get_objkey_from_index(self, filename, index):
+        return '%s_obj%d' % (filename, index)
+
+    def _get_chkkey_from_index(self, filename, obj_index, chk_index):
+        return '%s_obj%d_chk%d' % (filename, obj_index, chk_index)
+
+    def _store_file_info(self, filename, tmpinfo):
+        """store file info to seperate tables"""
+        # store file info to file table
+        file_info = {}
+        file_info['filename'] = tmpinfo['filename']
+        file_info['filesize'] = tmpinfo['filesize']
+        file_info['create_time'] = time.asctime()
+        file_info['code'] = tmpinfo['code']
+        file_info['object_num'] = tmpinfo['object_num']
+        file_info['object_size'] = tmpinfo['object_size']
+        file_info['block_size'] = tmpinfo['block_size']
+
+        ret = self.mds.addfile(filename, file_info)
+        if ret == RET_FAILURE:
+            logging.error('mds add file error')
+
+        object_num = tmpinfo['object_num']
+        chunk_size = tmpinfo['chunk_size']
+        chunk_num = tmpinfo['chunk_num']
+        block_size = tmpinfo['block_size']
+
+        # store objects info to object table
+        if ret == RET_SUCCESS:
+            object_info = {}
+            object_info['code'] = tmpinfo['code']
+            object_info['object_size'] = tmpinfo['object_size']
+            object_info['chunk_num'] = chunk_num
+            object_info['block_size'] = block_size
+            for i in range(0, object_num):
+                object_id = self._get_objkey_from_index(filename, i)
+                ret = self.mds.addobj(object_id, object_info)
+                if ret == RET_FAILURE:
+                    logging.error('add object error')
+                    break
+
+        # store chunk info to chunk table
+        if ret == RET_SUCCESS:
+            chunk_id = ''
+            chunk_info = {}
+            chunk_info['chunk_size'] = chunk_size
+            chunk_info['block_size'] = block_size
+            chunk_info['block_num'] = int(chunk_size/block_size)
+            chunk_info['status'] = CHUNK_OK
+
+            objects = tmpinfo['objects']
+            for obj_index in range(0, object_num):
+                for chk_index in range(0, chunk_num):
+                    chunk_id = self._get_chkkey_from_index(filename,
+                                                           obj_index,
+                                                           chk_index)
+                    chunk_info['ds_id'] = objects[obj_index][chk_index]
+                    ret = self.mds.addchk(chunk_id, chunk_info)
+
+        return ret
+
     def _handle_add_file_commit(self, filed, args):
         """handle client -> mds add file commit request, and response"""
         logging.info('handle add file commit request')
 
         state = RET_SUCCESS
-        info = ''
+        info = 'ok'
+
+        # get the filename
+        filename = args['name']
+
+        # check if filename in tmp table
+        if not self.mds.hastmp(filename):
+            state = RET_FAILURE
+            info = 'time out!! no such file, can not commit'
+
+        # move tmp filename information to real table
+        tmpinfo = self.mds.gettmp(filename)
+        state = self._store_file_info(filename, tmpinfo)
+
+        # delete tmp filename information
+        if state == RET_SUCCESS:
+            self.mds.deltmp(filename)
 
         # reply to client
         reply = AddFileCommitReplyPacket(state, info)
@@ -459,7 +536,7 @@ class MDSServer(object):
         logging.info('handle stat file request')
 
         state = RET_SUCCESS
-        info = ''
+        info = 'ok'
 
         # reply to client
         reply = StatFileReplyPacket(state, info)
@@ -472,7 +549,7 @@ class MDSServer(object):
         logging.info('handle delete file request')
 
         state = RET_SUCCESS
-        info = ''
+        info = 'ok'
 
         # reply to client
         reply = DeleteFileReplyPacket(state, info)

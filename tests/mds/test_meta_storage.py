@@ -195,3 +195,84 @@ class TestMDSStore(object):
 
         ret = mds.hastmp(tmpname)
         eq_(ret, False)
+
+    def test_file(self):
+        # connet to redis
+        mds = MDSStore(host='127.0.0.1', port=6379, db=0)
+
+        filename = '/mytestfile'
+        fileinfo = {
+            'parent_file': '/',
+            'create_time': '2015-03-04'
+        }
+        ret = mds.addfile(filename, fileinfo)
+        eq_(ret, True)
+
+        ret = mds.hasfile(filename)
+        eq_(ret, True)
+
+        ret = mds.getfile(filename)
+        eq_(fileinfo, ret)
+
+        ret = mds.hasfile('/nosuchfile/')
+        eq_(ret, False)
+
+        ret = mds.delfile(filename)
+        eq_(ret, True)
+
+        ret = mds.hasfile(filename)
+        eq_(ret, False)
+
+    def test_obj(self):
+        # connet to redis
+        mds = MDSStore(host='127.0.0.1', port=6379, db=0)
+
+        objname = '/mytestobj'
+        objinfo = {
+            'parent_obj': '/',
+            'create_time': '2015-03-04'
+        }
+        ret = mds.addobj(objname, objinfo)
+        eq_(ret, True)
+
+        ret = mds.hasobj(objname)
+        eq_(ret, True)
+
+        ret = mds.getobj(objname)
+        eq_(objinfo, ret)
+
+        ret = mds.hasobj('/nosuchobj/')
+        eq_(ret, False)
+
+        ret = mds.delobj(objname)
+        eq_(ret, True)
+
+        ret = mds.hasobj(objname)
+        eq_(ret, False)
+
+    def test_chk(self):
+        # connet to redis
+        mds = MDSStore(host='127.0.0.1', port=6379, db=0)
+
+        chkname = '/mytestchk'
+        chkinfo = {
+            'parent_chk': '/',
+            'create_time': '2015-03-04'
+        }
+        ret = mds.addchk(chkname, chkinfo)
+        eq_(ret, True)
+
+        ret = mds.haschk(chkname)
+        eq_(ret, True)
+
+        ret = mds.getchk(chkname)
+        eq_(chkinfo, ret)
+
+        ret = mds.haschk('/nosuchchk/')
+        eq_(ret, False)
+
+        ret = mds.delchk(chkname)
+        eq_(ret, True)
+
+        ret = mds.haschk(chkname)
+        eq_(ret, False)

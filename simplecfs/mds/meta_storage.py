@@ -7,7 +7,7 @@ import logging
 import json
 
 from simplecfs.mds.meta_table import dir_key, sub_key, ds_key, ds_alive_key,\
-    tmp_key
+    tmp_key, file_key, obj_key, chk_key
 from simplecfs.common.parameters import DS_BROKEN, RET_SUCCESS
 
 
@@ -52,6 +52,8 @@ class MDSStore(object):
         '''expire a key for timeout'''
         ret = self.r.expire(key, timeout)
         return ret
+
+    # directory operations
 
     def mkdir(self, dirname, dirinfo):
         logging.info('meta mkdir %s, %s', dirname, dirinfo)
@@ -125,6 +127,8 @@ class MDSStore(object):
     def hassub(self, dirname):
         logging.info('meta hassub %s', dirname)
         return self.exists(sub_key(dirname))
+
+    # ds operations
 
     def add_alive_ds(self, ds_ip, ds_port):
         key = ds_alive_key()
@@ -210,6 +214,8 @@ class MDSStore(object):
         key = ds_key(ds_ip, ds_port)
         return self.get(key)
 
+    # tmp file operations
+
     def addtmp(self, filename, fileinfo):
         logging.info('meta addtmp filename %s', filename)
 
@@ -235,4 +241,73 @@ class MDSStore(object):
     def gettmp(self, filename):
         logging.info('meta gettmp: file %s', filename)
         key = tmp_key(filename)
+        return self.get(key)
+
+    def addfile(self, filename, fileinfo):
+        logging.info('meta addfile filename %s', filename)
+
+        key = file_key(filename)
+        ret = self.set(key, fileinfo)
+        return ret
+
+    def hasfile(self, filename):
+        logging.info('meta hasfile: file %s', filename)
+        return self.exists(file_key(filename))
+
+    def delfile(self, filename):
+        logging.info('meta delfile: file %s', filename)
+        key = file_key(filename)
+        self.delete(key)
+
+        return True
+
+    def getfile(self, filename):
+        logging.info('meta getfile: file %s', filename)
+        key = file_key(filename)
+        return self.get(key)
+
+    def addobj(self, objname, objinfo):
+        logging.info('meta addobj objname %s', objname)
+
+        key = obj_key(objname)
+        ret = self.set(key, objinfo)
+        return ret
+
+    def hasobj(self, objname):
+        logging.info('meta hasobj: obj %s', objname)
+        return self.exists(obj_key(objname))
+
+    def delobj(self, objname):
+        logging.info('meta delobj: obj %s', objname)
+        key = obj_key(objname)
+        self.delete(key)
+
+        return True
+
+    def getobj(self, objname):
+        logging.info('meta getobj: obj %s', objname)
+        key = obj_key(objname)
+        return self.get(key)
+
+    def addchk(self, chkname, chkinfo):
+        logging.info('meta addchk chkname %s', chkname)
+
+        key = chk_key(chkname)
+        ret = self.set(key, chkinfo)
+        return ret
+
+    def haschk(self, chkname):
+        logging.info('meta haschk: chk %s', chkname)
+        return self.exists(chk_key(chkname))
+
+    def delchk(self, chkname):
+        logging.info('meta delchk: chk %s', chkname)
+        key = chk_key(chkname)
+        self.delete(key)
+
+        return True
+
+    def getchk(self, chkname):
+        logging.info('meta getchk: chk %s', chkname)
+        key = chk_key(chkname)
         return self.get(key)
