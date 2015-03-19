@@ -538,6 +538,18 @@ class MDSServer(object):
         state = RET_SUCCESS
         info = 'ok'
 
+        # get the filename
+        filename = args['name']
+
+        # check file exists or not
+        ret = self.mds.hasfile(filename)
+        if ret == RET_FAILURE:
+            logging.info('mds has no such file')
+            info = 'no such file'
+
+        if ret == RET_SUCCESS:
+            info = self.mds.getfile(filename)
+
         # reply to client
         reply = StatFileReplyPacket(state, info)
         msg = reply.get_message()
