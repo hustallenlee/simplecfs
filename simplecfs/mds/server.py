@@ -378,15 +378,23 @@ class MDSServer(object):
         logging.info('handle add file request')
 
         state = RET_SUCCESS
-        info = ''
+        info = 'ok'
 
         # get the file name, file size
         filename = args['name']
         fileinfo = args['info']
-        # TODO: check file exists or not
 
+        # check file exists or not
+        if self.mds.hasfile(filename):
+            state = RET_FAILURE
+            info = 'already has such file'
+
+        if self.mds.hastmp(filename):
+            state = RET_FAILURE
+            info = 'already add such file, not commit yet'
+
+        # set the code driver by fileinfo
         try:
-            # set the code driver by fileinfo
             code = self._get_code_driver(fileinfo)
         except (KeyError, ValueError, AssertionError):
             logging.exception('set code driver error')
@@ -457,6 +465,7 @@ class MDSServer(object):
         file_info['code'] = tmpinfo['code']
         file_info['object_num'] = tmpinfo['object_num']
         file_info['object_size'] = tmpinfo['object_size']
+        file_info['chunk_num'] = tmpinfo['chunk_num']
         file_info['block_size'] = tmpinfo['block_size']
 
         ret = self.mds.addfile(filename, file_info)
@@ -513,13 +522,18 @@ class MDSServer(object):
         filename = args['name']
 
         # check if filename in tmp table
+        if self.mds.hasfile(filename):
+            state = RET_FAILURE
+            info = 'already have such file, can not commit'
+
         if not self.mds.hastmp(filename):
             state = RET_FAILURE
             info = 'time out!! no such file, can not commit'
 
         # move tmp filename information to real table
-        tmpinfo = self.mds.gettmp(filename)
-        state = self._store_file_info(filename, tmpinfo)
+        if state == RET_SUCCESS:
+            tmpinfo = self.mds.gettmp(filename)
+            state = self._store_file_info(filename, tmpinfo)
 
         # delete tmp filename information
         if state == RET_SUCCESS:
@@ -542,12 +556,12 @@ class MDSServer(object):
         filename = args['name']
 
         # check file exists or not
-        ret = self.mds.hasfile(filename)
-        if ret == RET_FAILURE:
+        if not self.mds.hasfile(filename):
             logging.info('mds has no such file')
+            state = RET_FAILURE
             info = 'no such file'
 
-        if ret == RET_SUCCESS:
+        if state == RET_SUCCESS:
             info = self.mds.getfile(filename)
 
         # reply to client
@@ -562,6 +576,34 @@ class MDSServer(object):
 
         state = RET_SUCCESS
         info = 'ok'
+
+        # get the file name
+        filename = args['name']
+
+        # check file exists or not
+        if not self.mds.hasfile(filename):
+            state = RET_FAILURE
+            info = 'no such file, can not delete'
+
+        if state == RET_SUCCESS:
+            # get file information
+            fileinfo = self.mds.getfile(filename)
+            object_num = fileinfo['object_num']
+            chunk_num = fileinfo['chunk_num']
+
+            # remove file information
+            self.mds.delfile(filename)
+            for obj_index in range(0, object_num):
+                # remove objects information
+                object_id = self._get_objkey_from_index(filename, obj_index)
+                self.mds.delobj(object_id)
+
+                for chk_index in range(0, chunk_num):
+                    chunk_id = self._get_chkkey_from_index(filename,
+                                                           obj_index,
+                                                           chk_index)
+                    # remvoe chunks information
+                    self.mds.delchk(chunk_id)
 
         # reply to client
         reply = DeleteFileReplyPacket(state, info)

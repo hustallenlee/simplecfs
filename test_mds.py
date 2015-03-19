@@ -357,4 +357,4 @@ if __name__ == '__main__':
     # test_add_file()
     # test_add_file_commit()
     test_stat_file()
-    test_delete_file()
+    # test_delete_file()
