@@ -9,7 +9,7 @@ import logging
 import logging.handlers
 import eventlet
 
-from simplecfs.common.parameters import CODE_RS
+from simplecfs.common.parameters import CODE_RS, DS_CONNECTED, DS_BROKEN
 from simplecfs.message.packet import MakeDirPacket, RemoveDirPacket,\
     ListDirPacket, StatusDirPacket, ValidDirPacket, AddDSPacket,\
     ReportDSPacket, AddFilePacket, AddFileCommitPacket, StatFilePacket,\
@@ -193,15 +193,14 @@ def test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7000):
     sock_fd.close()
 
 
-def test_report_ds():
+def test_report_ds(ds_ip='127.0.0.1', ds_port=7000, status=DS_CONNECTED):
     """test function: report_ds(info)
     report ds state info to mds
     """
-    ds_ip = '127.0.0.1'
-    ds_port = 7000
     info = {
         'space': 102400,
         'chunk_num': 898,
+        'status': status,
     }
     packet = ReportDSPacket(ds_ip, ds_port, info)
     msg = packet.get_message()
@@ -348,6 +347,7 @@ if __name__ == '__main__':
 
     # test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7000)
     # test_report_ds()
+    test_report_ds(ds_ip='127.0.0.1', ds_port=7001, status=DS_BROKEN)
 
     # test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7001)
     # test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7002)
@@ -356,5 +356,5 @@ if __name__ == '__main__':
     # test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7005)
     # test_add_file()
     # test_add_file_commit()
-    test_stat_file()
+    # test_stat_file()
     # test_delete_file()
