@@ -20,14 +20,14 @@ from simplecfs.message.packet import MakeDirReplyPacket, RemoveDirReplyPacket,\
     AddDSReplyPacket, ReportDSReplyPacket, AddFileReplyPacket,\
     AddFileCommitReplyPacket, StatFileReplyPacket, DeleteFileReplyPacket,\
     GetFileReplyPacket, GetObjReplyPacket, GetChkReplyPacket,\
-    RepairChkReplyPacket
+    RepairChkReplyPacket, RepairChkCommitReplyPacket
 from simplecfs.coder.driver import RSDriver, CRSDriver, ZDriver
 
 
 class MDSServer(object):
     """mds server to handle network request and response"""
 
-    def __init__(self, config):
+    def __init__(self, config, test=False):
         """@config: ConfigParser() object"""
         self._config = config
 
@@ -827,7 +827,7 @@ class MDSServer(object):
         self.mds.addchk(chunk_id, chunk_info)
 
         # reply to client
-        reply = RepairChkReplyPacket(state, info)
+        reply = RepairChkCommitReplyPacket(state, info)
         msg = reply.get_message()
         logging.info("repair chunk return: %s", msg)
         send_command(filed, msg)

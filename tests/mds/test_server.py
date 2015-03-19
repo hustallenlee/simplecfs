@@ -1,15 +1,15 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-start the client for test mds
+unit test for mds
 """
-import argparse
 import ConfigParser as configparser
 import logging
 import logging.handlers
 import eventlet
+from nose.tools import eq_
 
-from simplecfs.common.parameters import CODE_RS, DS_CONNECTED, DS_BROKEN # NOQA
+from simplecfs.mds.server import MDSServer
+from simplecfs.common.parameters import *  # NOQA
 from simplecfs.message.packet import MakeDirPacket, RemoveDirPacket,\
     ListDirPacket, StatusDirPacket, ValidDirPacket, AddDSPacket,\
     ReportDSPacket, AddFilePacket, AddFileCommitPacket, StatFilePacket,\
@@ -17,45 +17,27 @@ from simplecfs.message.packet import MakeDirPacket, RemoveDirPacket,\
     RepairChkPacket, RepairChkCommitPacket
 from simplecfs.message.network_handler import send_command, recv_command
 
+MDS_CONFIG_FILE = './conf/mds.cfg'
+CLIENT_CONFIG_FILE = './conf/client.cfg'
+POOL = eventlet.GreenPool(10)
 
-def get_new_connection(ip_='127.0.0.1', port=8000):
-    return eventlet.connect((ip_, port))
+
+def start_mds(mds):
+    print 'start mds server'
+    mds.start()
 
 
-def init():
-    """init client"""
-    # handle command line argument
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config',
-                        metavar='CONFIG_FILE',
-                        help='clientconfig file',
-                        default='./conf/client.cfg')
-    args = parser.parse_args()
-    config_file = args.config
-
+def get_new_connection():
     # get config options
     config = configparser.ConfigParser()
-    config.read(config_file)
-
-    # init logging
-    logger = logging.getLogger()  # get the 'root' logger
-    level = getattr(logging, config.get('log', 'log_level'))
-    logger.setLevel(level)
-    log_name = config.get('log', 'log_name')
-    log_max_bytes = config.getint('log', 'log_max_bytes')
-    log_file_num = config.getint('log', 'log_file_num')
-    handler = logging.handlers.RotatingFileHandler(log_name,
-                                                   maxBytes=log_max_bytes,
-                                                   backupCount=log_file_num)
-    log_format = logging.Formatter('%(levelname)-8s[%(asctime)s.%(msecs)d]'
-                                   '<%(module)s> %(funcName)s:%(lineno)d:'
-                                   ' %(message)s',
-                                   datefmt='%Y-%m-%d %H:%M:%S')
-    handler.setFormatter(log_format)
-    logger.addHandler(handler)
+    config.read(CLIENT_CONFIG_FILE)
+    mds_ip = config.get('mds', 'mds_ip')
+    mds_port = config.getint('mds', 'mds_port')
+    print 'connect to server'
+    return eventlet.connect((mds_ip, mds_port))
 
 
-def test_make_dir(dirname='/testdir/'):
+def make_dir(dirname='/testdir/'):
     """test function: make_dir(dirname)
     dirname should be absolute path and end with '/'
     """
@@ -77,9 +59,10 @@ def test_make_dir(dirname='/testdir/'):
     print recv
     logging.info('recv: %s', recv)
     sock_fd.close()
+    return recv
 
 
-def test_remove_dir(dirname='/testdir/'):
+def remove_dir(dirname='/testdir/'):
     """test function: remove_dir(dirname)
     dirname should be absolute path and end with '/'
     """
@@ -101,9 +84,10 @@ def test_remove_dir(dirname='/testdir/'):
     print recv
     logging.info('recv: %s', recv)
     sock_fd.close()
+    return recv
 
 
-def test_list_dir(dirname='/'):
+def list_dir(dirname='/'):
     """test function: list_dir(dirname)
     dirname should be absolute path and end with '/'
     """
@@ -125,9 +109,10 @@ def test_list_dir(dirname='/'):
     print recv
     logging.info('recv: %s', recv)
     sock_fd.close()
+    return recv
 
 
-def test_status_dir(dirname='/testdir/'):
+def status_dir(dirname='/testdir/'):
     """test function: status_dir(dirname)
     dirname should be absolute path and end with '/'
     """
@@ -149,9 +134,10 @@ def test_status_dir(dirname='/testdir/'):
     print recv
     logging.info('recv: %s', recv)
     sock_fd.close()
+    return recv
 
 
-def test_valid_dir(dirname='/testdir/'):
+def valid_dir(dirname='/testdir/'):
     """test function: valid_dir(dirname)
     dirname should be absolute path and end with '/'
     """
@@ -173,9 +159,10 @@ def test_valid_dir(dirname='/testdir/'):
     print recv
     logging.info('recv: %s', recv)
     sock_fd.close()
+    return recv
 
 
-def test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7000):
+def add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7000):
     """test function: add_ds(rack_id, ds_ip, ds_port)
     """
     print 'add ds, rack_id:%d ip:%s port:%d' % (rack_id, ds_ip, ds_port)
@@ -192,9 +179,10 @@ def test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7000):
     print recv
     logging.info('recv: %s', recv)
     sock_fd.close()
+    return recv
 
 
-def test_report_ds(ds_ip='127.0.0.1', ds_port=7000, status=DS_CONNECTED):
+def report_ds(ds_ip='127.0.0.1', ds_port=7000, status=DS_CONNECTED):
     """test function: report_ds(info)
     report ds state info to mds
     """
@@ -216,9 +204,10 @@ def test_report_ds(ds_ip='127.0.0.1', ds_port=7000, status=DS_CONNECTED):
     print recv
     logging.info('recv: %s', recv)
     sock_fd.close()
+    return recv
 
 
-def test_add_file(filename='/testfile', fileinfo={}):
+def add_file(filename='/testfile', fileinfo={}):
     """
     test function: add_file(filename, fileinfo)
     filename should be absolute path,
@@ -263,9 +252,10 @@ def test_add_file(filename='/testfile', fileinfo={}):
     print recv
     logging.info('recv: %s', recv)
     sock_fd.close()
+    return recv
 
 
-def test_add_file_commit(filename='/testfile'):
+def add_file_commit(filename='/testfile'):
     """
     test function: add_file_commit(filename)
     filename should be absolute path,
@@ -284,9 +274,10 @@ def test_add_file_commit(filename='/testfile'):
     print recv
     logging.info('recv: %s', recv)
     sock_fd.close()
+    return recv
 
 
-def test_stat_file(filename='/testfile'):
+def stat_file(filename='/testfile'):
     """
     test function: stat_file(filename)
     filename should be absolute path,
@@ -305,9 +296,10 @@ def test_stat_file(filename='/testfile'):
     print recv
     logging.info('recv: %s', recv)
     sock_fd.close()
+    return recv
 
 
-def test_delete_file(filename='/testfile'):
+def delete_file(filename='/testfile'):
     """
     test function: delete_file(filename)
     filename should be absolute path,
@@ -326,9 +318,10 @@ def test_delete_file(filename='/testfile'):
     print recv
     logging.info('recv: %s', recv)
     sock_fd.close()
+    return recv
 
 
-def test_get_file(filepath='/testfile'):
+def get_file(filepath='/testfile'):
     """
     test function: get_file(filepath)
     filepath should be absolute path,
@@ -347,9 +340,10 @@ def test_get_file(filepath='/testfile'):
     print recv
     logging.info('recv: %s', recv)
     sock_fd.close()
+    return recv
 
 
-def test_get_obj(obj_id='/testfile_obj0'):
+def get_obj(obj_id='/testfile_obj0'):
     """
     test function: get_obj(obj_id)
     """
@@ -367,9 +361,10 @@ def test_get_obj(obj_id='/testfile_obj0'):
     print recv
     logging.info('recv: %s', recv)
     sock_fd.close()
+    return recv
 
 
-def test_get_chk(chk_id='/testfile_obj0_chk0'):
+def get_chk(chk_id='/testfile_obj0_chk0'):
     """
     test function: get_chk(chk_id)
     """
@@ -387,9 +382,10 @@ def test_get_chk(chk_id='/testfile_obj0_chk0'):
     print recv
     logging.info('recv: %s', recv)
     sock_fd.close()
+    return recv
 
 
-def test_repair_chk(chk_id='/testfile_obj0_chk0'):
+def repair_chk(chk_id='/testfile_obj0_chk0'):
     """
     test function: repair_chk(chk_id)
     """
@@ -407,10 +403,11 @@ def test_repair_chk(chk_id='/testfile_obj0_chk0'):
     print recv
     logging.info('recv: %s', recv)
     sock_fd.close()
+    return recv
 
 
-def test_repair_chk_commit(chk_id='/testfile_obj0_chk0',
-                           ds_id='127.0.0.1:7000'):
+def repair_chk_commit(chk_id='/testfile_obj0_chk0',
+                      ds_id='127.0.0.1:7000'):
     """
     test function: repair_chk_commit(chk_id, ds_id)
     """
@@ -428,48 +425,151 @@ def test_repair_chk_commit(chk_id='/testfile_obj0_chk0',
     print recv
     logging.info('recv: %s', recv)
     sock_fd.close()
+    return recv
 
 
-if __name__ == '__main__':
-    init()
+def test_mds():
+    # start the mds
+    config = configparser.ConfigParser()
+    config.read(MDS_CONFIG_FILE)
+
+    # start server
+    mds = MDSServer(config, test=True)
+    POOL.spawn_n(start_mds, mds)
 
     # start test mds
     dirname = '/testdir/'
-    # test_make_dir(dirname)
-    # test_list_dir('/')
-    # test_list_dir(dirname)
-    # test_status_dir(dirname)
-    # test_status_dir('/nosuchdir/')
-    # test_valid_dir(dirname)
-    # test_valid_dir('/nosuchdir/')
-    # test_remove_dir('/nosuchdir/')
-    # test_remove_dir(dirname)
-    # test_list_dir('/')
-    # test_status_dir(dirname)
-    # test_valid_dir(dirname)
+    ret = make_dir(dirname)
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_MAKE_DIR_REPLY)
 
-    # test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7000)
-    # test_report_ds()
-    # test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7001)
-    # test_report_ds(ds_ip='127.0.0.1', ds_port=7001, status=DS_BROKEN)
+    ret = list_dir('/')
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_LIST_DIR_REPLY)
+    eq_(True, dirname in ret['info'])
 
-    # test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7002)
-    # test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7003)
-    # test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7004)
-    # test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7005)
-    # test_add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7006)
+    ret = list_dir(dirname)
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_LIST_DIR_REPLY)
+    eq_([], ret['info'])
 
-    # test_add_file()
-    # test_add_file_commit()
-    # test_stat_file()
-    # test_delete_file()
+    ret = status_dir(dirname)
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_STATUS_DIR_REPLY)
 
-    # test_add_file()
-    # test_add_file_commit()
+    ret = status_dir('/nosuchdir/')
+    eq_(ret['state'], RET_FAILURE)
+    eq_(ret['method'], OP_STATUS_DIR_REPLY)
 
-    # test_get_file()
-    # test_get_obj()
-    # test_get_chk()
-    # test_repair_chk()
-    # test_repair_chk_commit()
-    # test_delete_file()
+    ret = valid_dir(dirname)
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_VALID_DIR_REPLY)
+
+    ret = valid_dir('/nosuchdir/')
+    eq_(ret['state'], RET_FAILURE)
+    eq_(ret['method'], OP_VALID_DIR_REPLY)
+
+    ret = remove_dir('/nosuchdir/')
+    eq_(ret['state'], RET_FAILURE)
+    eq_(ret['method'], OP_REMOVE_DIR_REPLY)
+
+    ret = remove_dir(dirname)
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_REMOVE_DIR_REPLY)
+
+    ret = list_dir('/')
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_LIST_DIR_REPLY)
+    eq_(False, dirname in ret['info'])
+
+    ret = status_dir(dirname)
+    eq_(ret['state'], RET_FAILURE)
+    eq_(ret['method'], OP_STATUS_DIR_REPLY)
+
+    ret = valid_dir(dirname)
+    eq_(ret['state'], RET_FAILURE)
+    eq_(ret['method'], OP_VALID_DIR_REPLY)
+
+    ret = add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7000)
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_ADD_DS_REPLY)
+
+    ret = report_ds()
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_REPORT_DS_REPLY)
+
+    ret = add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7001)
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_ADD_DS_REPLY)
+
+    ret = report_ds(ds_ip='127.0.0.1', ds_port=7001, status=DS_BROKEN)
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_REPORT_DS_REPLY)
+
+    ret = add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7002)
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_ADD_DS_REPLY)
+
+    ret = add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7003)
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_ADD_DS_REPLY)
+
+    ret = add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7004)
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_ADD_DS_REPLY)
+
+    ret = add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7005)
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_ADD_DS_REPLY)
+
+    ret = add_ds(rack_id=0, ds_ip='127.0.0.1', ds_port=7006)
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_ADD_DS_REPLY)
+
+    ret = add_file()
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_ADD_FILE_REPLY)
+
+    ret = add_file_commit()
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_ADD_FILE_COMMIT_REPLY)
+
+    ret = stat_file()
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_STAT_FILE_REPLY)
+
+    ret = delete_file()
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_DELETE_FILE_REPLY)
+
+    ret = add_file()
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_ADD_FILE_REPLY)
+
+    ret = add_file_commit()
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_ADD_FILE_COMMIT_REPLY)
+
+    ret = get_file()
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_GET_FILE_REPLY)
+
+    ret = get_obj()
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_GET_OBJ_REPLY)
+
+    ret = get_chk()
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_GET_CHK_REPLY)
+
+    ret = repair_chk()
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_REPAIR_CHK_REPLY)
+
+    ret = repair_chk_commit()
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_REPAIR_CHK_COMMIT_REPLY)
+
+    ret = delete_file()
+    eq_(ret['state'], RET_SUCCESS)
+    eq_(ret['method'], OP_DELETE_FILE_REPLY)
