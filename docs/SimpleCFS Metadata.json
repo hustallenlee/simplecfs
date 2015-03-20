@@ -1,0 +1,96 @@
+"dir:DIRECTORY_ID" = {  // 目录信息，目录名DIRECTORY以'/'结尾
+    "parent_dir":           "PARENT_DIRECTORY_ID",  //父目录，根目录为'/'
+    "create_time":          "2014-11-32T16:25:43.511Z",  //创建时间
+}
+
+"subfiles:DIRECTORY_ID" = [  // 目录子文件信息，子目录以'/'结尾
+    "SUBFILE0",  //子文件或子目录名
+    "SUBFILE1",
+    "etc."
+]
+
+"tmp:FILE_ID" = {  // 文件增加时临时保存文件的信息(设置过期时间)，在文件commit后写入正式的表中
+    "filename": "/testfile", //
+    "filesize":         1024,  // 文件大小(byte)
+     "code" : {
+        "type":       "rs/zcode/etc.", // 编码方法
+        "k":                4, 
+        "m":                2,
+        "packet_size": 1024,
+    },
+
+    "object_num":    12, // 划分的object数目
+    "object_size":      1024, // object大小(byte)
+    "chunk_size":   256,  // chunk 大小(byte)
+    "block_size": 256, //256的倍数
+    "chunk_num":     4, // 一个stripe中chunk数目，包含数据和校验
+
+    "objects": [
+        ["ds:ip0", "ds:ip1", "..."],  // object0 信息, chunk in ds position
+        ["ds:ip0", "ds:ip1", "..."],  // object1 信息, chunk in ds position
+        // etc.
+    ]
+}
+
+"file:FILENAME_ID" = {  // 文件信息
+    "filename": "/testfile",
+    "filesize":         "1024",  // 文件大小(byte)
+    "create_time":      "2014-11-32T16:45:43.511Z",  //创建时间
+    "code" : {
+        "type":       "rs/zcode/etc.", // 编码方法
+        "k":                "4", 
+        "m":                "2",
+    },
+    "object_number":    12, // 划分的object数目
+    "object_size":      64, // object大小(byte)
+    "chunk_num":    4, // chunk num in one object
+    "block_size": 256, //256的倍数
+
+    "objects:FILENAME_ID": [  // 划分的的object ID，不用保存。
+        "FILENAME_obj0",  // 文件名加"_obj[num]", num = 0 ~ (object_number-1)
+        "FILENAME_obj1",
+        "etc."
+    ]
+}
+
+"object:OBJECT_ID" = {  // object 信息
+    "code" : {
+        "type":       "rs/zcode/etc.", // 编码方法
+        "k":                "4", 
+        "m":                "2",
+    },
+    "object_size":      "64", // object大小(byte)
+    "chunk_number":     "4", // chunk数目，包含数据和校验
+    "block_size": 256, //256的倍数
+
+    "chunks:OBJECT_ID": [  // 划分后的chunk ID，不用保存。
+        "OBJECT_ID_chk0", // object ID加"_chk[num]", num = 0 ~ (chunk_number-1)
+        "OBJECT_ID_chk1",
+        "ect."
+    ]
+}
+
+"chunk:CHUNK_ID" = {  // chunk 信息
+    "chunk_size":   256,  // chunk 大小(byte)
+    "block_size": 256,    // block 大小(byte), 256的倍数
+    "block_num": 1, // block num in one chunk
+    "ds_id":        "DS_ID",  // 保存在的ds的ID
+    "status": "ok/break/missing/damaged", // 状态：正常/断开与ds的连接/丢失/损坏，读取时检查
+}
+
+"ds:DS_ID" = {  // ds 信息,DS_ID是ip:port的字符串
+    "ip":   "192.168.1.200",
+    "port": 7000,
+    "rack": 0,
+    "status": "connected/break",  // 状态：连接/断开
+    "space": 10240,  // M
+    "chunk_num": 87, 
+    "update_time": "2015-01-01 22:10:23.522",
+    // etc.
+}
+
+"ds_alive" = [  // 记录存活的ds的ID
+    "DS_ID 1",
+    "DS_ID 2",
+    "etc.",
+]
