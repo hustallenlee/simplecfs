@@ -4,6 +4,13 @@ client api
 """
 import logging
 import logging.handlers
+import eventlet
+from os.path import normpath
+
+from simplecfs.message.packet import MakeDirPacket, ListDirPacket,\
+    ValidDirPacket, StatDirPacket, RemoveDirPacket
+from simplecfs.message.network_handler import send_command, recv_command
+from simplecfs.common.parameters import RET_FAILURE
 
 
 class Client(object):
@@ -43,21 +50,163 @@ class Client(object):
         # init current working directory
         self._cwd = '/'
 
+    def _get_sockfd_to_mds(self):
+        sock = eventlet.connect((self._mds_ip, self._mds_port))
+        return sock.makefile('rw')
+
+    def _change_to_absolute_path(self, pathname):
+        """change the path to absolute path in case of relative pathname"""
+        # if not absolute path, add _cwd
+        if not pathname.startswith('/'):
+            pathname = self._cwd + pathname
+
+        # delete '.' and '..'
+        pathname = normpath(pathname)
+
+        return pathname
+
     def mkdir(self, dirname):
         """make directory"""
-        pass
+        dirname = dirname.strip()
+        if not dirname.endswith('/'):
+            dirname += '/'
+
+        # change dirname to absolute path
+        absolute_path = self._change_to_absolute_path(dirname)
+        if not absolute_path.endswith('/'):
+            absolute_path += '/'
+
+        # make request packet
+        packet = MakeDirPacket(absolute_path)
+        msg = packet.get_message()
+
+        # get socket to mds
+        sock = self._get_sockfd_to_mds()
+
+        # send request
+        logging.info('mkdir send msg: %s', msg)
+        send_command(sock, msg)
+
+        # recv response
+        recv = recv_command(sock)
+        logging.info('mkdir recv msg: %s', recv)
+        sock.close()
+
+        # check response and return
+        state = recv['state']
+        info = recv['info']
+        if state == RET_FAILURE:
+            logging.info('mkdir response error: %s', info)
+        return (state, info)
 
     def rmdir(self, dirname):
         """remove empty directory"""
-        pass
+        dirname = dirname.strip()
+        if not dirname.endswith('/'):
+            dirname += '/'
+
+        # change dirname to absolute path
+        absolute_path = self._change_to_absolute_path(dirname)
+        if not absolute_path.endswith('/'):
+            absolute_path += '/'
+
+        # make request packet
+        packet = RemoveDirPacket(absolute_path)
+        msg = packet.get_message()
+
+        # get socket to mds
+        sock = self._get_sockfd_to_mds()
+
+        # send request
+        logging.info('rmdir send msg: %s', msg)
+        send_command(sock, msg)
+
+        # recv response
+        recv = recv_command(sock)
+        logging.info('rmdir recv msg: %s', recv)
+        sock.close()
+
+        # check response and return
+        state = recv['state']
+        info = recv['info']
+        if state == RET_FAILURE:
+            logging.info('rmdir response error: %s', info)
+        return (state, info)
 
     def listdir(self, dirname):
-        """ls directory"""
-        pass
+        """ls directory
+        return: (state, subfiles)
+            state: RET_FAILURE/RET_SUCCESS
+            subfiles: [file1, dir1, ...]
+        """
+        dirname = dirname.strip()
+        if not dirname.endswith('/'):
+            dirname += '/'
 
-    def chdir(self, path):
+        # change dirname to absolute path
+        absolute_path = self._change_to_absolute_path(dirname)
+        if not absolute_path.endswith('/'):
+            absolute_path += '/'
+
+        # make request packet
+        packet = ListDirPacket(absolute_path)
+        msg = packet.get_message()
+
+        # get socket to mds
+        sock = self._get_sockfd_to_mds()
+
+        # send request
+        logging.info('list dir send msg: %s', msg)
+        send_command(sock, msg)
+
+        # recv response
+        recv = recv_command(sock)
+        logging.info('list dir recv msg: %s', recv)
+        sock.close()
+
+        # check response and return
+        state = recv['state']
+        info = recv['info']
+        if state == RET_FAILURE:
+            logging.info('list dir response error: %s', info)
+        return (state, info)
+
+    def chdir(self, dirname):
         """change directory"""
-        pass
+        dirname = dirname.strip()
+        if not dirname.endswith('/'):
+            dirname += '/'
+
+        # change dirname to absolute path
+        absolute_path = self._change_to_absolute_path(dirname)
+        if not absolute_path.endswith('/'):
+            absolute_path += '/'
+
+        # make request packet
+        packet = ValidDirPacket(absolute_path)
+        msg = packet.get_message()
+
+        # get socket to mds
+        sock = self._get_sockfd_to_mds()
+
+        # send request
+        logging.info('valid dir send msg: %s', msg)
+        send_command(sock, msg)
+
+        # recv response
+        recv = recv_command(sock)
+        logging.info('valid dir recv msg: %s', recv)
+        sock.close()
+
+        # check response and return
+        state = recv['state']
+        info = recv['info']
+        if state == RET_FAILURE:
+            logging.info('change dir error: %s', info)
+        else:
+            logging.info('change to dir: %s', absolute_path)
+            self._cwd = absolute_path
+        return (state, info)
 
     def getcwd(self):
         """get current working directory"""
@@ -65,7 +214,37 @@ class Client(object):
 
     def statdir(self, dirname):
         """stat directory"""
-        pass
+        dirname = dirname.strip()
+        if not dirname.endswith('/'):
+            dirname += '/'
+
+        # change dirname to absolute path
+        absolute_path = self._change_to_absolute_path(dirname)
+        if not absolute_path.endswith('/'):
+            absolute_path += '/'
+
+        # make request packet
+        packet = StatDirPacket(absolute_path)
+        msg = packet.get_message()
+
+        # get socket to mds
+        sock = self._get_sockfd_to_mds()
+
+        # send request
+        logging.info('stat dir send msg: %s', msg)
+        send_command(sock, msg)
+
+        # recv response
+        recv = recv_command(sock)
+        logging.info('stat dir recv msg: %s', recv)
+        sock.close()
+
+        # check response and return
+        state = recv['state']
+        info = recv['info']
+        if state == RET_FAILURE:
+            logging.info('stat dir response error: %s', info)
+        return (state, info)
 
     def putfile(self, src_path, des_path, code_info):
         """put local @src_path file to remote @des_path with @code_info"""
