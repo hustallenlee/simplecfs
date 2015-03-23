@@ -33,3 +33,18 @@ if __name__ == '__main__':
     client = init()
     print 'current directory: '
     print client.getcwd()
+    dirname = '/testdir/'
+    print client.mkdir(dirname)
+    print client.listdir('/')
+    print client.listdir(dirname)
+    print client.statdir('nosuchdir/')
+    print client.statdir(dirname)
+    print client.chdir(dirname)
+    print client.getcwd()
+    print client.rmdir(dirname)
+    print client.chdir('/')
+    print client.getcwd()
+    print client.rmdir(dirname)
+    print client.statdir(dirname)
+    print client.chdir(dirname)
+    print client.getcwd()

@@ -8,7 +8,7 @@ import eventlet
 from os.path import normpath
 
 from simplecfs.message.packet import MakeDirPacket, ListDirPacket,\
-    ValidDirPacket, StatDirPacket, RemoveDirPacket
+    ValidDirPacket, StatusDirPacket, RemoveDirPacket
 from simplecfs.message.network_handler import send_command, recv_command
 from simplecfs.common.parameters import RET_FAILURE
 
@@ -109,6 +109,13 @@ class Client(object):
         absolute_path = self._change_to_absolute_path(dirname)
         if not absolute_path.endswith('/'):
             absolute_path += '/'
+
+        # check current directory in dirname
+        if self._cwd.startswith(absolute_path):
+            logging.info('can not remove directory contain cwd')
+            state = RET_FAILURE
+            info = 'can not remvoe directory contain cwd'
+            return (state, info)
 
         # make request packet
         packet = RemoveDirPacket(absolute_path)
@@ -224,7 +231,7 @@ class Client(object):
             absolute_path += '/'
 
         # make request packet
-        packet = StatDirPacket(absolute_path)
+        packet = StatusDirPacket(absolute_path)
         msg = packet.get_message()
 
         # get socket to mds
