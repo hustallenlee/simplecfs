@@ -601,6 +601,7 @@ class MDSServer(object):
 
             # remove file information
             self.mds.delfile(filename)
+            chunks = []
             for obj_index in range(0, object_num):
                 # remove objects information
                 object_id = self._get_objkey_from_index(filename, obj_index)
@@ -611,9 +612,13 @@ class MDSServer(object):
                                                            obj_index,
                                                            chk_index)
                     # remvoe chunks information
+                    chunk = self.mds.getchk(chunk_id)
+                    chunks.append((chunk_id, chunk['ds_id']))
                     self.mds.delchk(chunk_id)
 
         # reply to client
+        if state == RET_SUCCESS:
+            info = chunks
         reply = DeleteFileReplyPacket(state, info)
         msg = reply.get_message()
         logging.info("delete file return: %s", msg)

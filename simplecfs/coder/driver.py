@@ -57,6 +57,14 @@ class RSDriver(object):
         """return the chunk num in a object"""
         return self.k + self.m
 
+    def get_data_chunk_num(self):
+        """return the data chunk num in a object"""
+        return self.k
+
+    def get_parity_chunk_num(self):
+        """return the parity chunk num in a object"""
+        return self.m
+
     def get_object_size(self):
         """return the object size"""
         return self.chunk_size * self.k
@@ -257,6 +265,14 @@ class CRSDriver(object):
     def get_chunk_num(self):
         """return the chunk num in a object"""
         return self.k + self.m
+
+    def get_data_chunk_num(self):
+        """return the data chunk num in a object"""
+        return self.k
+
+    def get_parity_chunk_num(self):
+        """return the parity chunk num in a object"""
+        return self.m
 
     def get_object_size(self):
         """return the object size"""
@@ -462,6 +478,14 @@ class ZDriver(object):
     def get_chunk_num(self):
         """return the chunk num in a object"""
         return self.k + self.m
+
+    def get_data_chunk_num(self):
+        """return the data chunk num in a object"""
+        return self.k
+
+    def get_parity_chunk_num(self):
+        """return the parity chunk num in a object"""
+        return self.m
 
     def get_object_size(self):
         """return the object size"""
