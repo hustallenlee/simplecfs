@@ -10,7 +10,7 @@ from os.path import normpath, getsize
 from simplecfs.message.packet import MakeDirPacket, ListDirPacket,\
     ValidDirPacket, StatusDirPacket, RemoveDirPacket, AddFilePacket,\
     AddChunkPacket, AddFileCommitPacket, StatFilePacket, DeleteFilePacket,\
-    DeleteChunkPacket, GetChkPacket, GetChunkPacket
+    DeleteChunkPacket, GetChkPacket, GetChunkPacket, ReportDSPacket
 from simplecfs.coder.driver import RSDriver, CRSDriver, ZDriver
 from simplecfs.message.network_handler import send_command, recv_command,\
     send_data, recv_data
@@ -561,16 +561,16 @@ class Client(object):
                 state = CHUNK_MISSING
 
             if state == CHUNK_OK:
-                chunk_id = '%s_chk%d' % (object_id, index)
+                chk_id = '%s_chk%d' % (object_id, index)
                 ds_id = item_info['ds_id']
-                available_chunk[chunk_id] = ds_id
+                available_chunk[chk_id] = ds_id
             else:
                 missing_chunk.append(index)
 
         repair_indexes = []
         exclude_indexes = []
-        chunk_index = int(chunk_id.rsplit('_chk')[1])
         code_type = driver.get_type()
+        chunk_index = int(chunk_id.rsplit('_chk')[1])
         if code_type == CODE_RS:
             repair_indexes.append(chunk_index)
             exclude_indexes = missing_chunk
@@ -588,6 +588,7 @@ class Client(object):
 
         (state, need_list) = driver.repair_needed_blocks(repair_indexes,
                                                          exclude_indexes)
+
         if state == RET_FAILURE:
             logging.error('repair needed blocks return error')
             return data
@@ -596,13 +597,15 @@ class Client(object):
         need_data = []
         block_num = driver.get_block_num()
         blist = []
-        chunk_idx = 0
+        chunk_idx = -1   # start num
         for index in need_list:
             new_chunk_idx = index / block_num
+            if chunk_idx < 0:
+                chunk_idx = new_chunk_idx
             if new_chunk_idx != chunk_idx:
-                chunk_id = '%s_chk%d' % (object_id, chunk_idx)
-                ds_id = available_chunk[chunk_id]
-                get_data = self._get_blocks_from_ds(ds_id, chunk_id,
+                chk_id = '%s_chk%d' % (object_id, chunk_idx)
+                ds_id = available_chunk[chk_id]
+                get_data = self._get_blocks_from_ds(ds_id, chk_id,
                                                     blist, block_num)
                 need_data += get_data
                 blist = []
@@ -612,9 +615,9 @@ class Client(object):
                 blist.append(index % block_num)
 
         # get last chunk blocks
-        chunk_id = '%s_chk%d' % (object_id, chunk_idx)
-        ds_id = available_chunk[chunk_id]
-        get_data = self._get_blocks_from_ds(ds_id, chunk_id,
+        chk_id = '%s_chk%d' % (object_id, chunk_idx)
+        ds_id = available_chunk[chk_id]
+        get_data = self._get_blocks_from_ds(ds_id, chk_id,
                                             blist, block_num)
         need_data += get_data
 
@@ -671,3 +674,47 @@ class Client(object):
             fd.close()
 
         return (state, info)
+
+    def get_chunk_ds_id(self, chunk_id):
+        ds_ip = ''
+        ds_port = 0
+        logging.info('get chunk: %s', chunk_id)
+
+        packet = GetChkPacket(chunk_id)
+        msg = packet.get_message()
+        sock = self._get_sockfd_to_mds()
+        send_command(sock, msg)
+
+        recv = recv_command(sock)
+        state = recv['state']
+        info = recv['info']
+        if state == RET_FAILURE:
+            logging.error('get chunk recv from mds: %s', recv)
+            return (ds_ip, ds_port)
+
+        # get chunk ds_id
+        chunk_idx = int(chunk_id.rsplit('_chk')[1])
+        chunks_info = info['chunks']
+        chunk_info = chunks_info[chunk_idx]
+        ds_id = chunk_info['ds_id']
+        ds_ip = ds_id.split(':')[0]
+        ds_port = int(ds_id.split(':')[1])
+
+        return (ds_ip, ds_port)
+
+    def report_ds(self, ds_ip, ds_port, status=DS_CONNECTED):
+        info = {
+            'status': status,
+        }
+        packet = ReportDSPacket(ds_ip, ds_port, info)
+        msg = packet.get_message()
+        sock = self._get_sockfd_to_mds()
+
+        logging.info('report ds :%s', msg)
+        send_command(sock, msg)
+
+        recv = recv_command(sock)
+        logging.info('reprot ds recv: %s', recv)
+        sock.close()
+
+        return recv['state']
