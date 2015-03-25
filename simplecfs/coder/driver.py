@@ -54,6 +54,9 @@ class RSDriver(object):
         """return the block size"""
         return self.block_size
 
+    def get_block_num(self):
+        return 1
+
     def get_chunk_size(self):
         """return the chunk size"""
         return self.chunk_size
@@ -266,6 +269,9 @@ class CRSDriver(object):
     def get_block_size(self):
         """return the block size"""
         return self.block_size
+
+    def get_block_num(self):
+        return self.w
 
     def get_chunk_size(self):
         """return the chunk size"""
@@ -483,6 +489,9 @@ class ZDriver(object):
     def get_block_size(self):
         """return the block size"""
         return self.block_size
+
+    def get_block_num(self):
+        return self.r
 
     def get_chunk_size(self):
         """return the chunk size"""

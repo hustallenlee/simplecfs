@@ -27,6 +27,7 @@ class TestRSDriver(object):
         eq_(rs.k, rs.get_data_chunk_num())
         eq_(rs.m, rs.get_parity_chunk_num())
         eq_(4096, rs.get_object_size())
+        eq_(1, rs.get_block_num())
 
         rs = RSDriver(k=3, m=3, w=8, packet_size=1024, block_size=1024)
         eq_(3, rs.k)
@@ -115,6 +116,7 @@ class TestCRSDriver(object):
         eq_(crs.k, crs.get_data_chunk_num())
         eq_(crs.m, crs.get_parity_chunk_num())
         eq_(16384, crs.get_object_size())
+        eq_(4, crs.get_block_num())
 
         crs = CRSDriver(k=3, m=3, w=8, packet_size=1024, block_size=1024)
         eq_(3, crs.k)
@@ -204,6 +206,7 @@ class TestZDriver(object):
         eq_(z.k, z.get_data_chunk_num())
         eq_(z.m, z.get_parity_chunk_num())
         eq_(32768, z.get_object_size())
+        eq_(8, z.get_block_num())
 
         z = ZDriver(k=3, m=3, packet_size=1024, block_size=1024)
         eq_(3, z.k)

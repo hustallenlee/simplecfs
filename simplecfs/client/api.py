@@ -10,12 +10,12 @@ from os.path import normpath, getsize
 from simplecfs.message.packet import MakeDirPacket, ListDirPacket,\
     ValidDirPacket, StatusDirPacket, RemoveDirPacket, AddFilePacket,\
     AddChunkPacket, AddFileCommitPacket, StatFilePacket, DeleteFilePacket,\
-    DeleteChunkPacket
+    DeleteChunkPacket, GetChkPacket, GetChunkPacket
 from simplecfs.coder.driver import RSDriver, CRSDriver, ZDriver
 from simplecfs.message.network_handler import send_command, recv_command,\
-    send_data
+    send_data, recv_data
 from simplecfs.common.parameters import RET_FAILURE, RET_SUCCESS, CODE_RS,\
-    CODE_CRS, CODE_Z
+    CODE_CRS, CODE_Z, CHUNK_OK, CHUNK_MISSING, DS_CONNECTED
 
 
 class Client(object):
@@ -437,12 +437,6 @@ class Client(object):
 
         return (state, info)
 
-    def getfile(self, des_path, local_path, repair_flag):
-        """get file from @des_path to @local_path,
-        if repair_flag is True, repair missing chunks
-        """
-        pass
-
     def delfile(self, path):
         """delete a file"""
         filename = self._change_to_absolute_path(path)
@@ -494,4 +488,186 @@ class Client(object):
         sock.close()
         state = recv['state']
         info = recv['info']
+        return (state, info)
+
+    def getfile(self, des_path, local_path, repair_flag=False):
+        """get file from @des_path to @local_path,
+        if repair_flag is True, repair missing chunks
+        """
+        logging.info('get file: %s to %s', des_path, local_path)
+        # filename = self._change_to_absolute_path(des_path)
+        state = RET_SUCCESS
+        info = 'ok'
+
+        # TODO
+
+        return (state, info)
+
+    def _get_one_chunk_from_ds(self, ds_id, chunk_id):
+        """get one chunk"""
+        data = ''
+
+        packet = GetChunkPacket(chunk_id, 1, [0])  # get all blocks in one chunk
+        msg = packet.get_message()
+        sock = self._get_sockfd_to_ds(ds_id.split(':')[0],
+                                      int(ds_id.split(':')[1]))
+        send_command(sock, msg)
+        recv = recv_command(sock)
+        if recv['state'] != RET_SUCCESS:
+            logging.error('get chunk from ds error: %s', recv['info'])
+        else:
+            data = recv_data(sock)
+        sock.close()
+
+        return data
+
+    def _get_blocks_from_ds(self, ds_id, chunk_id, blist, block_num):
+        """get @blist form a chunk, chunk contain block_num blocks
+        return a block list
+        """
+        data_list = []
+
+        packet = GetChunkPacket(chunk_id, block_num, blist)
+        msg = packet.get_message()
+        sock = self._get_sockfd_to_ds(ds_id.split(':')[0],
+                                      int(ds_id.split(':')[1]))
+        send_command(sock, msg)
+        recv = recv_command(sock)
+        if recv['state'] != RET_SUCCESS:
+            logging.error('get chunk from ds error: %s', recv['info'])
+        else:
+            data = recv_data(sock)
+        sock.close()
+
+        size = len(data)/len(blist)
+        data_list = [data[i*size:(i+1)*size] for i in range(len(blist))]
+
+        return data_list
+
+    def _degrade_get_chunk(self, stripe_info, chunk_id):  # NOQA
+        """repair chunk from other chunks"""
+        data = ''
+        driver = self._get_code_driver(stripe_info['code'])
+
+        available_chunk = {}
+        missing_chunk = []
+        object_id = chunk_id.rsplit('_chk')[0]
+        chunks_info = stripe_info['chunks']
+        chunk_num = len(chunks_info)
+        for index in range(chunk_num):
+            item_info = chunks_info[index]
+            state = item_info['status']
+            if item_info['ds_info']['status'] != DS_CONNECTED:
+                state = CHUNK_MISSING
+
+            if state == CHUNK_OK:
+                chunk_id = '%s_chk%d' % (object_id, index)
+                ds_id = item_info['ds_id']
+                available_chunk[chunk_id] = ds_id
+            else:
+                missing_chunk.append(index)
+
+        repair_indexes = []
+        exclude_indexes = []
+        chunk_index = int(chunk_id.rsplit('_chk')[1])
+        code_type = driver.get_type()
+        if code_type == CODE_RS:
+            repair_indexes.append(chunk_index)
+            exclude_indexes = missing_chunk
+        elif code_type == CODE_CRS:
+            repair_indexes = range(chunk_index*driver.w,
+                                   (chunk_index+1)*driver.w)
+            for index in missing_chunk:
+                mlist = range(index*driver.w, (index+1)*driver.w)
+                exclude_indexes += mlist
+        elif code_type == CODE_Z:
+            repair_indexes = chunk_index
+            if len(missing_chunk) > 1:
+                logging.error('zcode missing chunk > 1')
+                return data
+
+        (state, need_list) = driver.repair_needed_blocks(repair_indexes,
+                                                         exclude_indexes)
+        if state == RET_FAILURE:
+            logging.error('repair needed blocks return error')
+            return data
+
+        # get need data from chunks
+        need_data = []
+        block_num = driver.get_block_num()
+        blist = []
+        chunk_idx = 0
+        for index in need_list:
+            new_chunk_idx = index / block_num
+            if new_chunk_idx != chunk_idx:
+                chunk_id = '%s_chk%d' % (object_id, chunk_idx)
+                ds_id = available_chunk[chunk_id]
+                get_data = self._get_blocks_from_ds(ds_id, chunk_id,
+                                                    blist, block_num)
+                need_data += get_data
+                blist = []
+                chunk_idx = new_chunk_idx
+                blist.append(index % block_num)
+            else:
+                blist.append(index % block_num)
+
+        # get last chunk blocks
+        chunk_id = '%s_chk%d' % (object_id, chunk_idx)
+        ds_id = available_chunk[chunk_id]
+        get_data = self._get_blocks_from_ds(ds_id, chunk_id,
+                                            blist, block_num)
+        need_data += get_data
+
+        # repair chunk
+        (state, data) = driver.repair(need_data, need_list, repair_indexes)
+        if state == RET_FAILURE:
+            logging.error('repair error')
+            data = ''
+
+        return data
+
+    def getchunk(self, chunk_id, local_path, repair_flag=False):
+        """get chunk from @des_path to @local_path,
+        if repair_flag is True, repair missing chunks
+        """
+        logging.info('get chunk: %s to %s', chunk_id, local_path)
+        state = RET_SUCCESS
+        info = 'ok'
+
+        packet = GetChkPacket(chunk_id)
+        msg = packet.get_message()
+        sock = self._get_sockfd_to_mds()
+        send_command(sock, msg)
+
+        recv = recv_command(sock)
+        state = recv['state']
+        info = recv['info']
+        if state == RET_FAILURE:
+            logging.error('get chunk recv from mds: %s', recv)
+            return (state, info)
+
+        # check chunk status
+        chunk_idx = int(chunk_id.rsplit('_chk')[1])
+        chunks_info = info['chunks']
+        chunk_info = chunks_info[chunk_idx]
+        chunk_state = chunk_info['status']
+        ds_id = chunk_info['ds_id']
+
+        if chunk_info['ds_info']['status'] != DS_CONNECTED:
+            chunk_state = CHUNK_MISSING
+
+        if chunk_state != CHUNK_OK:
+            # degrade chunk get
+            data = self._degrade_get_chunk(recv['info'], chunk_id)
+        else:
+            # get data from chunk
+            data = self._get_one_chunk_from_ds(ds_id, chunk_id)
+
+        if not data:
+            info = 'get chunk from ds error'
+        else:
+            fd = open(local_path, 'w')
+            fd.write(data)
+            fd.close()
+
         return (state, info)

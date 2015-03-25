@@ -469,6 +469,9 @@ class MDSServer(object):
     def _get_file_from_object_id(self, object_id):
         return object_id.rsplit('_obj')[0]
 
+    def _get_obj_from_chunk_id(self, chunk_id):
+        return chunk_id.rsplit('_chk')[0]
+
     def _store_file_info(self, filename, tmpinfo):
         """store file info to seperate tables"""
         # store file info to file table
@@ -742,7 +745,7 @@ class MDSServer(object):
         logging.info('handle get chunk request')
 
         state = RET_SUCCESS
-        info = 'ok'
+        info = {}
 
         # get the chunk_id
         chunk_id = args['chunk']
@@ -752,24 +755,35 @@ class MDSServer(object):
             state = RET_FAILURE
             info = 'no such chunk'
 
-        # get the chunks information
+        # get the chunks stripe information
+        one_stripe = []
         if state == RET_SUCCESS:
-            chunk_info = self.mds.getchk(chunk_id)
+            # get the objects information
+            object_id = self._get_obj_from_chunk_id(chunk_id)
+            object_info = self.mds.getobj(object_id)
+            chunk_num = object_info['chunk_num']
 
-            # get the ds information
-            ds_id = chunk_info['ds_id']
-            ds_info = self._get_ds_info(ds_id)
-            chunk_info['ds_info'] = ds_info
+            # get the chunks information
+            for chk_index in range(0, chunk_num):
+                chunk_id = '%s_chk%d' % (object_id, chk_index)
+                # get the chunks information
+                chunk_info = self.mds.getchk(chunk_id)
+
+                # get the ds information
+                ds_id = chunk_info['ds_id']
+                ds_info = self._get_ds_info(ds_id)
+                chunk_info['ds_info'] = ds_info
+                one_stripe.append(chunk_info)
+
+        if state == RET_SUCCESS:
+            info['chunks'] = one_stripe
 
         # get code information from file
         if state == RET_SUCCESS:
             filename = self._get_file_from_chunk_id(chunk_id)
             file_info = self.mds.getfile(filename)
             code_info = file_info['code']
-            chunk_info['code'] = code_info
-
-        if state == RET_SUCCESS:
-            info = chunk_info
+            info['code'] = code_info
 
         # reply to client
         reply = GetChkReplyPacket(state, info)
