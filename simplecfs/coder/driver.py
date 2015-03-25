@@ -6,7 +6,8 @@ import ctypes
 import logging
 from math import pow
 
-from simplecfs.common.parameters import RET_FAILURE, RET_SUCCESS
+from simplecfs.common.parameters import RET_FAILURE, RET_SUCCESS,\
+    CODE_RS, CODE_CRS, CODE_Z
 
 
 class RSDriver(object):
@@ -19,6 +20,7 @@ class RSDriver(object):
     """
     def __init__(self, **args):
         """init the rs driver with args"""
+        self.type = CODE_RS
         self.k = 4
         self.m = 2
         self.w = 4
@@ -44,6 +46,9 @@ class RSDriver(object):
 
         self.chunk_size = self.block_size
         self.rs = ctypes.CDLL('ext/librlc/librlc.so')
+
+    def get_type(self):
+        return self.type
 
     def get_block_size(self):
         """return the block size"""
@@ -228,6 +233,7 @@ class CRSDriver(object):
     """
     def __init__(self, **args):
         """init the crs driver with args"""
+        self.type = CODE_CRS
         self.k = 4
         self.m = 2
         self.w = 4
@@ -253,6 +259,9 @@ class CRSDriver(object):
 
         self.chunk_size = self.block_size * self.w
         self.crs = ctypes.CDLL('ext/librlc/librlc.so')
+
+    def get_type(self):
+        return self.type
 
     def get_block_size(self):
         """return the block size"""
@@ -439,6 +448,7 @@ class ZDriver(object):
     """
     def __init__(self, **args):
         """init the z driver with args"""
+        self.type = CODE_Z
         self.k = 4
         self.m = 2
         self.packet_size = 512
@@ -466,6 +476,9 @@ class ZDriver(object):
         self.r = int(pow(self.m, self.k-1))
         self.chunk_size = self.block_size * self.r
         self.z = ctypes.CDLL('ext/librlc/librlc.so')
+
+    def get_type(self):
+        return self.type
 
     def get_block_size(self):
         """return the block size"""

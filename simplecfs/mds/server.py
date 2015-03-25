@@ -463,6 +463,12 @@ class MDSServer(object):
     def _get_chkkey_from_index(self, filename, obj_index, chk_index):
         return '%s_obj%d_chk%d' % (filename, obj_index, chk_index)
 
+    def _get_file_from_chunk_id(self, chunk_id):
+        return chunk_id.rsplit('_obj')[0]
+
+    def _get_file_from_object_id(self, object_id):
+        return object_id.rsplit('_obj')[0]
+
     def _store_file_info(self, filename, tmpinfo):
         """store file info to seperate tables"""
         # store file info to file table
@@ -715,6 +721,13 @@ class MDSServer(object):
             # get the ds information
             object_info['chunks'] = one_stripe
 
+        # get code information from file
+        if state == RET_SUCCESS:
+            filename = self._get_file_from_chunk_id(chunk_id)
+            file_info = self.mds.getfile(filename)
+            code_info = file_info['code']
+            object_info['code'] = code_info
+
         if state == RET_SUCCESS:
             info = object_info
 
@@ -747,6 +760,13 @@ class MDSServer(object):
             ds_id = chunk_info['ds_id']
             ds_info = self._get_ds_info(ds_id)
             chunk_info['ds_info'] = ds_info
+
+        # get code information from file
+        if state == RET_SUCCESS:
+            filename = self._get_file_from_chunk_id(chunk_id)
+            file_info = self.mds.getfile(filename)
+            code_info = file_info['code']
+            chunk_info['code'] = code_info
 
         if state == RET_SUCCESS:
             info = chunk_info

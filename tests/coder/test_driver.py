@@ -6,7 +6,7 @@ import os
 from nose.tools import eq_
 
 from simplecfs.coder.driver import RSDriver, CRSDriver, ZDriver
-from simplecfs.common.parameters import RET_SUCCESS
+from simplecfs.common.parameters import RET_SUCCESS, CODE_RS, CODE_CRS, CODE_Z
 
 
 class TestRSDriver(object):
@@ -14,6 +14,7 @@ class TestRSDriver(object):
     def test_init(self):
         """test init"""
         rs = RSDriver()
+        eq_(CODE_RS, rs.get_type())
         eq_(4, rs.k)
         eq_(2, rs.m)
         eq_(4, rs.w)
@@ -101,6 +102,7 @@ class TestCRSDriver(object):
     def test_init(self):
         """test init"""
         crs = CRSDriver()
+        eq_(CODE_CRS, crs.get_type())
         eq_(4, crs.k)
         eq_(2, crs.m)
         eq_(4, crs.w)
@@ -189,6 +191,7 @@ class TestZDriver(object):
     def test_init(self):
         """test init"""
         z = ZDriver()
+        eq_(CODE_Z, z.get_type())
         eq_(4, z.k)
         eq_(2, z.m)
         eq_(8, z.r)
