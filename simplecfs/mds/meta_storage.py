@@ -8,7 +8,7 @@ import json
 
 from simplecfs.mds.meta_table import dir_key, sub_key, ds_key, ds_alive_key,\
     tmp_key, file_key, obj_key, chk_key
-from simplecfs.common.parameters import DS_BROKEN, RET_SUCCESS
+from simplecfs.common.parameters import DS_BROKEN, RET_SUCCESS, DS_CONNECTED
 
 
 class MDSStore(object):
@@ -192,6 +192,8 @@ class MDSStore(object):
 
         if ret and dsinfo['status'] == DS_BROKEN:
             ret = self.del_alive_ds(ds_ip, ds_port)
+        if ret and dsinfo['status'] == DS_CONNECTED:
+            ret = self.add_alive_ds(ds_ip, ds_port)
 
         return ret
 
