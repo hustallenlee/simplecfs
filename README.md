@@ -6,26 +6,23 @@ a simple coded file system.
 
 1. gf\_complete
 2. librlc
+3. nose
+4. eventlet
+5. greenlet
+6. redis
 
 ## Install
     
     git clone --recursive http://192.168.0.19/hustlijian/simplecfs.git
     cd simplecfs  # change directory to simplecfs
+
+    sudo pip install -r requirements.txt
     
-    cd ext/gf-complete
-	./autogen.sh
-	./configure
-	make
-	cp src/.libs/libgf_complete.a ../librlc/gf_complete.a
-
-	cd ../librlc
-	make
-
-    cd ../../  # back to simplecfs directory
+    make
 
 ## Test
 
-    python setup.py test
+    make test
 
 ## Run
 
