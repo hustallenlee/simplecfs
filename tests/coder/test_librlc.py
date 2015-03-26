@@ -196,6 +196,7 @@ def test_zcode(k=4, m=2, packet_size=1024):
     # decode
     # no decode in zcode, use original data
     print 'Decode: '
+    block_len = int(block_len.value)
 
     # repair
     print 'Repair: '
@@ -211,17 +212,17 @@ def test_zcode(k=4, m=2, packet_size=1024):
     all_data = encoded_data+encoded_parity
     for item in repair_list:
         print item,
-        available_data += all_data[block_len.value*item:
-                                   block_len.value*(item+1)]
+        available_data += all_data[block_len*item:
+                                   block_len*(item+1)]
     out_data = ctypes.pointer(ctypes.c_char_p())
     librlc.librlc_z_repair(k, m, packet_size, available_data, repair_list,
                            repair_num, block_len, node,
                            ctypes.byref(out_data))
-    data = ctypes.string_at(out_data, r*block_len.value)
+    data = ctypes.string_at(out_data, r*block_len)
 
-    new_data = encoded_data[:(node*r)*block_len.value]
+    new_data = encoded_data[:(node*r)*block_len]
     new_data += data
-    new_data += encoded_data[(node+1)*r*block_len.value:]
+    new_data += encoded_data[(node+1)*r*block_len:]
     repair_data = new_data
     librlc.librlc_z_repair_cleanup(out_data)
     eq_(repair_data, encoded_data_value)
