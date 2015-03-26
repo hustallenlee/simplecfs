@@ -1,4 +1,5 @@
 build:
+	# 编译gf-complete
 	cd ext/gf-complete;./autogen.sh;./configure;make;cp src/.libs/libgf_complete.a ../librlc/gf_complete.a
 	# 编译librlc
 	cd ext/librlc;make
