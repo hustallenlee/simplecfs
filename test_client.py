@@ -7,7 +7,7 @@ import argparse
 import ConfigParser as configparser
 
 from simplecfs.client.api import Client
-# from simplecfs.common.parameters import CODE_RS
+from simplecfs.common.parameters import CODE_RS
 # from simplecfs.common.parameters import CODE_CRS
 # from simplecfs.common.parameters import CODE_Z
 from simplecfs.common.parameters import DS_BROKEN, DS_CONNECTED
@@ -53,15 +53,15 @@ if __name__ == '__main__':
     # print client.chdir(dirname)
     # print client.getcwd()
 
-    ip = '127.0.0.1'
-    port = 7001
+    # ip = '127.0.0.1'
+    # port = 7001
     # print 'change ds to ds broken'
     # print client.report_ds(ip, port, DS_BROKEN)
-    print 'change ds to ds connected'
-    print client.report_ds(ip, port, DS_CONNECTED)
+    # print 'change ds to ds connected'
+    # print client.report_ds(ip, port, DS_CONNECTED)
 
     # # ---- test rs code ----
-    # des_path = './rstest.txt'
+    des_path = './rstest.txt'
     # src_path = '/Users/lijian/temp/test/rstest.txt'
     # code_info = {  # default code info
     #     'type': CODE_RS,
@@ -75,8 +75,8 @@ if __name__ == '__main__':
     # print client.putfile(src_path, des_path, code_info)
     # print 'statfile: '
     # print client.statfile(des_path)
-    # print 'delfile:'
-    # print client.delfile(des_path)
+    print 'delfile:'
+    print client.delfile(des_path)
 
     # chunk_id = '/rstest.txt_obj0_chk0'
     # local_path = '/Users/lijian/temp/test/rschk0'

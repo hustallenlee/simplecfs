@@ -18,6 +18,34 @@ from simplecfs.common.parameters import RET_FAILURE, RET_SUCCESS, CODE_RS,\
     CODE_CRS, CODE_Z, CHUNK_OK, CHUNK_MISSING, DS_CONNECTED
 
 
+# for multithreading
+def get_blocks_from_ds(ds_id, chunk_id, blist, block_num, need_data, index):
+    """get @blist form a chunk, chunk contain block_num blocks
+    return a block list
+    """
+    data_list = []
+
+    packet = GetChunkPacket(chunk_id, block_num, blist)
+    msg = packet.get_message()
+    sock = eventlet.connect((ds_id.split(':')[0],
+                             int(ds_id.split(':')[1])))
+    sock = sock.makefile('rw')
+    send_command(sock, msg)
+    recv = recv_command(sock)
+    if recv['state'] != RET_SUCCESS:
+        logging.error('get chunk from ds error: %s', recv['info'])
+    else:
+        data = recv_data(sock)
+    sock.close()
+
+    size = len(data)/len(blist)
+    data_list = [data[i*size:(i+1)*size] for i in range(len(blist))]
+    for i in range(len(blist)):
+        need_data[index+i] = data_list[i]
+
+    return data_list
+
+
 class Client(object):
     """client to do request"""
     def __init__(self, config, test=False):
@@ -54,6 +82,10 @@ class Client(object):
 
         # init current working directory
         self._cwd = '/'
+
+        # init thread pool
+        thread_num = config.getint('thread', 'thread_num')
+        self.pool = eventlet.GreenPool(thread_num)
 
     def _get_sockfd_to_mds(self):
         sock = eventlet.connect((self._mds_ip, self._mds_port))
@@ -418,7 +450,8 @@ class Client(object):
                 chunk_data = chunks[0][data_idx*chunk_size:
                                        (data_idx+1)*chunk_size]
                 ds_id = ds_list[obj_idx][data_idx]
-                self._send_chunk_to_ds(chunk_id, chunk_data, ds_id)
+                self.pool.spawn_n(self._send_chunk_to_ds, chunk_id,
+                                  chunk_data, ds_id)
 
             for parity_idx in range(parity_chunk_num):
                 chunk_id = self._get_chkkey_from_idx(filename,
@@ -427,7 +460,10 @@ class Client(object):
                 chunk_data = chunks[1][parity_idx*chunk_size:
                                        (parity_idx+1)*chunk_size]
                 ds_id = ds_list[obj_idx][parity_idx+data_chunk_num]
-                self._send_chunk_to_ds(chunk_id, chunk_data, ds_id)
+                self.pool.spawn_n(self._send_chunk_to_ds, chunk_id,
+                                  chunk_data, ds_id)
+            # wait for write end
+            self.pool.waitall()
 
         fd.close()
 
@@ -594,10 +630,10 @@ class Client(object):
             return data
 
         # get need data from chunks
-        need_data = []
         block_num = driver.get_block_num()
         blist = []
         chunk_idx = -1   # start num
+        task = []
         for index in need_list:
             new_chunk_idx = index / block_num
             if chunk_idx < 0:
@@ -605,9 +641,7 @@ class Client(object):
             if new_chunk_idx != chunk_idx:
                 chk_id = '%s_chk%d' % (object_id, chunk_idx)
                 ds_id = available_chunk[chk_id]
-                get_data = self._get_blocks_from_ds(ds_id, chk_id,
-                                                    blist, block_num)
-                need_data += get_data
+                task.append([ds_id, chk_id, blist, block_num])
                 blist = []
                 chunk_idx = new_chunk_idx
                 blist.append(index % block_num)
@@ -617,9 +651,18 @@ class Client(object):
         # get last chunk blocks
         chk_id = '%s_chk%d' % (object_id, chunk_idx)
         ds_id = available_chunk[chk_id]
-        get_data = self._get_blocks_from_ds(ds_id, chk_id,
-                                            blist, block_num)
-        need_data += get_data
+        task.append([ds_id, chk_id, blist, block_num])
+
+        task_data = need_list[:]
+
+        # multithreading read blocks
+        index = 0
+        for item in task:
+            self.pool.spawn_n(get_blocks_from_ds, item[0], item[1], item[2],
+                              item[3], task_data, index)
+            index += len(item[2])
+        self.pool.waitall()
+        need_data = task_data
 
         # repair chunk
         (state, data) = driver.repair(need_data, need_list, repair_indexes)
