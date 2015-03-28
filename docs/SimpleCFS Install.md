@@ -58,8 +58,126 @@ de20 | 192.168.3.140 | 22 | user:f309 passwd:87792302 | ds
 
 ### 4.5.运行
 
-TODO
+#### 4.5.1 MDS
 
+0.安装依赖
+
+	cd simplecfs
+	sudo pip install -r requirements.txt
+
+1.编译
+
+	make
+	
+2.修改配置文件
+
+	vim conf/mds.cfg
+	
+	>[mds]
+	>mds_ip=192.168.3.121
+	>mds_port=8000
+	>...
+	>log_level=WARNING
+	
+3.启动redis-server
+
+	cd ext/redis/src/
+	./redis-server &
+
+4.启动mds
+
+	cd simplecfs
+	./mds.py
+
+
+#### 4.5.2 DS
+
+1.安装依赖
+
+	cd simplecfs
+	sudo pip install -r requirements.txt
+	
+2.修改配置文件
+
+	vim conf/ds.cfg
+	>ds_ip=192.168.3.125  # 不同ds修改成不同的ip
+	>ds_port=7000
+	>rack_id=1
+
+	>[mds]
+	>mds_ip=192.168.3.121
+	>mds_port=8000
+	>...
+	>log_level=WARNING
+
+3.启动ds
+
+	cd simplecfs
+	./ds.py
+	
+#### 4.5.3 client
+
+1.安装依赖
+
+	cd simplecfs
+	sudo pip install -r requirements.txt
+	
+2.修改配置文件
+
+	vim conf/client.cfg
+
+	>[mds]
+	>mds_ip=192.168.3.121
+	>mds_port=8000
+	>...
+	>log_level=WARNING
+	>[file]
+	>packet_size=512     ;multiples of 256(byte)
+	>block_size=1024     ;multiples of 256(byte), block_size>=packet_size
+
+	>[thread]
+	>thread_num=1000     ;多线程读写时线程(伪线程:协程)的数量
+
+
+3.使用client测试文件
+
+	cd simplecfs
+	./rs_test.py   # 可以是其它的测试功能，client以api方式使用，使用类封装
+
+#### 4.5.4 查看日志
+
+1.mds日志
+
+	cd simplecfs/log
+	cat mds.log
+	
+2.ds日志
+
+	cd simplecfs/log
+	cat ds.log
+
+3.client日志
+
+	cd simplecfs/log
+	cat client.log
+	
+#### 4.5.5 清空数据
+
+1.清空mds元数据
+
+	cd ext/redis/src
+	rm dump.rdb   # 删除redis元数据，再重启redis-server就好了
+
+2.清空ds数据
+
+	cd simplecfs
+	rm storage/*
+
+3.清空日志数据
+
+	cd simplecfs
+	rm log/*
+	
 ## 5.其它
 
 1.安装pip
