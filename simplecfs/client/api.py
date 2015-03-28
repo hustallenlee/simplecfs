@@ -379,21 +379,18 @@ class Client(object):
             state = RET_FAILURE
             info = 'no such file in local'
 
-        # get the block_size from config
-        block_size = self._config.getint('file', 'block_size')
-
         # set the fileinfo
         fileinfo = {}
         fileinfo['filesize'] = filesize
-        fileinfo['block_size'] = block_size
+        fileinfo['block_size'] = self._block_size
 
         code = {  # default code info
             'type': CODE_RS,
             'k': 2,
             'm': 2,
             'w': 8,
-            'packet_size': 512,
-            'block_size': block_size,
+            'packet_size': self._packet_size,
+            'block_size': self._block_size,
         }
         for (key, value) in code_info.items():
             code[key] = value
