@@ -364,6 +364,8 @@ class Client(object):
         if state == RET_FAILURE:
             info = 'add file commit error'
 
+        if state == RET_SUCCESS:
+            info = 'ok'
         return (state, info)
 
     def putfile(self, src_path, des_path, code_info={}):
@@ -378,6 +380,13 @@ class Client(object):
             logging.error('no such file in local: %s', src_path)
             state = RET_FAILURE
             info = 'no such file in local'
+
+        # set the block_size
+        try:
+            block_size = code_info['block_size']
+            self._block_size = block_size
+        except KeyError:
+            pass
 
         # set the fileinfo
         fileinfo = {}
@@ -468,6 +477,8 @@ class Client(object):
         if state == RET_SUCCESS:
             (state, info) = self._add_file_commit(filename)
 
+        if state == RET_SUCCESS:
+            info = 'ok'
         return (state, info)
 
     def delfile(self, path):
@@ -504,6 +515,8 @@ class Client(object):
                 logging.error('delete chunk in ds: %s %s', chunk_id, ds_id)
                 info = 'delete chunk ds error'
 
+        if state == RET_SUCCESS:
+            info = 'ok'
         return (state, info)
 
     def statfile(self, path):
@@ -534,6 +547,8 @@ class Client(object):
 
         # TODO
 
+        if state == RET_SUCCESS:
+            info = 'ok'
         return (state, info)
 
     def _get_one_chunk_from_ds(self, ds_id, chunk_id):
@@ -713,6 +728,8 @@ class Client(object):
             fd.write(data)
             fd.close()
 
+        if state == RET_SUCCESS:
+            info = 'ok'
         return (state, info)
 
     def get_chunk_ds_id(self, chunk_id):
