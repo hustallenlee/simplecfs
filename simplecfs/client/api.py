@@ -381,17 +381,9 @@ class Client(object):
             state = RET_FAILURE
             info = 'no such file in local'
 
-        # set the block_size
-        try:
-            block_size = code_info['block_size']
-            self._block_size = block_size
-        except KeyError:
-            pass
-
         # set the fileinfo
         fileinfo = {}
         fileinfo['filesize'] = filesize
-        fileinfo['block_size'] = self._block_size
 
         code = {  # default code info
             'type': CODE_RS,

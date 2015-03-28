@@ -226,13 +226,13 @@ def add_file(filename='/testfile', fileinfo={}):
     """
     fileinfo = {
         "filesize": 20480,
-        "block_size": 1024,
         "code": {
             "type": CODE_RS,  # "rs/crs/zcode/etc.",
             "k": 2,
             "m": 2,
             "w": 8,
             "packet_size": 512,
+            "block_size": 1024,
         },
     }
 

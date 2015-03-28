@@ -329,11 +329,10 @@ class MDSServer(object):
         logging.info("valid dir return: %s", msg)
         send_command(filed, msg)
 
-    def _get_code_driver(self, args):
-        """return a init code driver according to args """
-        block_size = int(args['block_size'])
-        code_info = args['code']
+    def _get_code_driver(self, code_info):
+        """return a init code driver according to code_info"""
         code_type = code_info['type']
+        block_size = int(code_info['block_size'])
 
         code = None
         if code_type == CODE_RS:
@@ -403,7 +402,7 @@ class MDSServer(object):
 
         # set the code driver by fileinfo
         try:
-            code = self._get_code_driver(fileinfo)
+            code = self._get_code_driver(fileinfo['code'])
         except (KeyError, ValueError, AssertionError):
             logging.exception('set code driver error')
             state = RET_FAILURE
