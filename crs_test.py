@@ -5,11 +5,24 @@ use Client for test
 """
 import argparse
 import ConfigParser as configparser
+import time
 
 from simplecfs.client.api import Client
 from simplecfs.common.parameters import CODE_CRS
 from simplecfs.common.parameters import DS_BROKEN, DS_CONNECTED
 
+des_path = './64M.txt'
+base_path = '/home/qing/simplecfs/storage/'
+src_path = ''
+
+code_info = {  # default code info
+    'type': CODE_CRS,
+    'k': 3,
+    'm': 2,
+    'w': 4,
+    'packet_size': 1024,
+    'block_size': 33554432,  # 32M
+}
 
 def init():
     """init client"""
@@ -30,53 +43,62 @@ def init():
     client = Client(config, test=True)
     return client
 
+
 def test_putfile(client):
-    des_path = './64M.txt'
-    src_path = '/home/f309/simplecfs/storage/64M.txt'
-    code_info = {
-        'type': CODE_CRS,
-        'k': 2,
-        'm': 2,
-        'w': 8,
-        'packet_size': 1024,
-        'block_size': 4194304,  # 4M
-    }
-    print 'putfile: '
-    print client.putfile(src_path, des_path, code_info)
-    print 'statfile: '
-    print client.statfile(des_path)
+    client.putfile(src_path, des_path, code_info)
+
 
 def test_normal_get_chunk(client):
     chunk_id = '/64M.txt_obj0_chk0'
-    local_path = '/home/f309/simplecfs/storage/crschk0'
-    print 'normal read chunk'
-    print client.getchunk(chunk_id, local_path)
+    local_path = '/home/qing/simplecfs/storage/rschk0'
+    client.getchunk(chunk_id, local_path)
 
 def test_degrade_get_chunk(client):
     chunk_id = '/64M.txt_obj0_chk0'
-    print 'get chunk ds_id:'
     (ip, port) = client.get_chunk_ds_id(chunk_id)
-    print 'report ds:'
-    print client.report_ds(ip, port, DS_BROKEN)
-    print 'degrade read chunk'
-    degrade_path = '/home/f309/simplecfs/storage/degrade_crschk0'
-    print client.getchunk(chunk_id, degrade_path)
-    print 'report ds:'
-    print client.report_ds(ip, port, DS_CONNECTED)
+    client.report_ds(ip, port, DS_BROKEN)
+    degrade_path = '/home/qing/simplecfs/storage/degrade_rschk0'
+    client.getchunk(chunk_id, degrade_path)
+    client.report_ds(ip, port, DS_CONNECTED)
 
 def test_delete_file(client):
     des_path = './64M.txt'
-    print 'delfile:'
-    print client.delfile(des_path)
-    pass
+    client.delfile(des_path)
 
 if __name__ == '__main__':
     client = init()
-    # # ---- test crs code ----
+    size_num = [1,2,4,8,16,32,64,128,256,512]
+    for each_num in size_num:
+        file_name = str(each_num)+'M.txt'
+        src_path = base_path+file_name
+        file_size = each_num*(1024*1024)
+        r = 4
+        code_info['block_size'] = (file_size/(3*r*1024)+1)*1024
+        total_time = 0
+        for i in xrange(10):
+            t1 = time.time()
+            test_putfile(client)
+            total_time += time.time()-t1
+            test_delete_file(client)
+        print  file_name[:-4], total_time/10,
+            
+            
+        file_name = str(each_num)+'Mdeg.txt'
+        src_path = base_path+file_name
+        code_info['block_size'] = file_size/r
+        test_putfile(client)
+        total_time = 0
+        for i in xrange(10):
+            t1 = time.time()
+            test_degrade_get_chunk(client)
+            total_time += time.time()-t1
+        print total_time/10
+        test_delete_file(client)
+    # # ---- test rs code ----
     # test_putfile(client)
 
     # test_normal_get_chunk(client)
 
     # test_degrade_get_chunk(client)
 
-    # test_delete_file(client)
+    #test_delete_file(client)
