@@ -380,6 +380,7 @@ class Client(object):
             logging.error('no such file in local: %s', src_path)
             state = RET_FAILURE
             info = 'no such file in local'
+            return (state, info)
 
         # set the fileinfo
         fileinfo = {}
