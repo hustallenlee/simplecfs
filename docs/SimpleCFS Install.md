@@ -46,7 +46,7 @@ de20 | 192.168.3.140 | 22 | user:f309 passwd:87792302 | ds
 	# 解压源代码，安装python依赖	
 	tar xzf simplecfs.tar.gz 
 	cd simplecfs
-	pip install -r requirements.txt
+	sudo pip install -r requirements.txt
 
 ### 4.3.编译
 
