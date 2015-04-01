@@ -10,7 +10,8 @@ from os.path import normpath, getsize
 from simplecfs.message.packet import MakeDirPacket, ListDirPacket,\
     ValidDirPacket, StatusDirPacket, RemoveDirPacket, AddFilePacket,\
     AddChunkPacket, AddFileCommitPacket, StatFilePacket, DeleteFilePacket,\
-    DeleteChunkPacket, GetChkPacket, GetChunkPacket, ReportDSPacket
+    DeleteChunkPacket, GetChkPacket, GetChunkPacket, ReportDSPacket,\
+    GetObjPacket
 from simplecfs.coder.driver import RSDriver, CRSDriver, ZDriver
 from simplecfs.message.network_handler import send_command, recv_command,\
     send_data, recv_data
@@ -21,7 +22,7 @@ from simplecfs.common.parameters import RET_FAILURE, RET_SUCCESS, CODE_RS,\
 # for multithreading
 def get_blocks_from_ds(ds_id, chunk_id, blist, block_num, need_data, index):
     """get @blist form a chunk, chunk contain block_num blocks
-    return a block list
+    return a block list store in @need_data
     """
     data_list = []
 
@@ -368,7 +369,7 @@ class Client(object):
             info = 'ok'
         return (state, info)
 
-    def putfile(self, src_path, des_path, code_info={}):
+    def putfile(self, src_path, des_path, code_info={}):  # NOQA
         """put local @src_path file to remote @des_path with @code_info"""
         state = RET_SUCCESS
         info = 'ok'
@@ -544,6 +545,92 @@ class Client(object):
             info = 'ok'
         return (state, info)
 
+    def getobject(self, object_id, local_path, repair_flag=False):
+        """get object from @des_path to @local_path,
+        if repair_flag is True, repair missing objects
+        """
+        logging.info('get object: %s to %s', object_id, local_path)
+        state = RET_SUCCESS
+        info = 'ok'
+
+        packet = GetObjPacket(object_id)
+        msg = packet.get_message()
+        sock = self._get_sockfd_to_mds()
+        send_command(sock, msg)
+
+        recv = recv_command(sock)
+        state = recv['state']
+        info = recv['info']
+        if state == RET_FAILURE:
+            logging.error('get object recv from mds: %s', recv)
+            return (state, info)
+
+        # init the code driver
+        driver = self._get_code_driver(info['code'])
+        data_chunk_num = driver.get_data_chunk_num()
+
+        # check the chunk status
+        available_chunk = []
+        missing_chunk = []
+        chunks_info = info['chunks']
+        chunk_num = info['chunk_num']
+        for index in range(chunk_num):
+            item_info = chunks_info[index]
+            state = item_info['status']
+            if item_info['ds_info']['status'] != DS_CONNECTED:
+                state == CHUNK_MISSING
+
+            if state == CHUNK_OK:
+                chk_id = '%s_chk%d' % (object_id, index)
+                ds_id = item_info['ds_id']
+                available_chunk.append((chk_id, ds_id))
+            else:
+                missing_chunk.append(index)
+
+        # set the available_chunk and available_list
+        if len(available_chunk) < data_chunk_num:
+            logging.error('available_chunk less than data chunk num')
+            info = 'available_chunk < data_chunk_num'
+            return (RET_FAILURE, info)
+
+        task = []
+        block_num = driver.get_block_num()
+        block_list = []
+        for index in range(data_chunk_num):
+            ds_id = available_chunk[index][1]
+            chk_id = available_chunk[index][0]
+            chk_index = int(chk_id.rsplit('_chk')[1])
+            blist = range(block_num)
+            task.append((ds_id, chk_id, blist, block_num))
+            block_list += range(chk_index*block_num, (chk_index+1)*block_num)
+
+        task_data = block_list[:]
+
+        # multithreading read blocks
+        index = 0
+        for item in task:
+            self.pool.spawn_n(get_blocks_from_ds, item[0], item[1], item[2],
+                              item[3], task_data, index)
+            index += len(item[2])
+        self.pool.waitall()
+
+        # decode object
+        (state, data) = driver.decode(task_data, block_list)
+        if state == RET_FAILURE:
+            logging.error('decode error')
+            info = 'decode error'
+            return (RET_FAILURE, info)
+
+        # write to disk
+        fd = open(local_path, 'w')
+        fd.write(data)
+        fd.close()
+
+        if state == RET_SUCCESS:
+            info = 'ok'
+
+        return (state, info)
+
     def _get_one_chunk_from_ds(self, ds_id, chunk_id):
         """get one chunk"""
         data = ''
@@ -716,6 +803,7 @@ class Client(object):
 
         if not data:
             info = 'get chunk from ds error'
+            state == RET_FAILURE
         else:
             fd = open(local_path, 'w')
             fd.write(data)

@@ -7,10 +7,8 @@ import argparse
 import ConfigParser as configparser
 
 from simplecfs.client.api import Client
-from simplecfs.common.parameters import CODE_RS
-# from simplecfs.common.parameters import CODE_CRS
-# from simplecfs.common.parameters import CODE_Z
-from simplecfs.common.parameters import DS_BROKEN, DS_CONNECTED
+from simplecfs.common.parameters import CODE_RS, CODE_CRS, CODE_Z  # NOQA
+from simplecfs.common.parameters import DS_BROKEN, DS_CONNECTED  # NOQA
 
 
 def init():
@@ -61,7 +59,7 @@ if __name__ == '__main__':
     # print client.report_ds(ip, port, DS_CONNECTED)
 
     # # ---- test rs code ----
-    des_path = './rstest.txt'
+    # des_path = './rstest.txt'
     # src_path = '/Users/lijian/temp/test/rstest.txt'
     # code_info = {  # default code info
     #     'type': CODE_RS,
@@ -75,8 +73,8 @@ if __name__ == '__main__':
     # print client.putfile(src_path, des_path, code_info)
     # print 'statfile: '
     # print client.statfile(des_path)
-    print 'delfile:'
-    print client.delfile(des_path)
+    # print 'delfile:'
+    # print client.delfile(des_path)
 
     # chunk_id = '/rstest.txt_obj0_chk0'
     # local_path = '/Users/lijian/temp/test/rschk0'
@@ -94,6 +92,12 @@ if __name__ == '__main__':
     # print client.report_ds(ip, port, DS_CONNECTED)
     # print 'delfile:'
     # print client.delfile(des_path)
+
+    # print 'get object test'
+    # object_id = '/rstest.txt_obj0'
+    # local_path = '/Users/lijian/temp/test/rsobj0'
+    # print 'get object: '
+    # print client.getobject(object_id, local_path)
 
     # # ---- test crs code ----
     # des_path = './crstest.txt'
@@ -128,6 +132,12 @@ if __name__ == '__main__':
     # print 'delfile:'
     # print client.delfile(des_path)
 
+    # print 'get object test'
+    # object_id = '/crstest.txt_obj0'
+    # local_path = '/Users/lijian/temp/test/crsobj0'
+    # print 'get object: '
+    # print client.getobject(object_id, local_path)
+
     # # ---- test zcode ----
     # des_path = './ztest.txt'
     # src_path = '/Users/lijian/temp/test/ztest.txt'
@@ -159,3 +169,9 @@ if __name__ == '__main__':
     # print client.report_ds(ip, port, DS_CONNECTED)
     # print 'delfile:'
     # print client.delfile(des_path)
+
+    # print 'get object test'
+    # object_id = '/ztest.txt_obj0'
+    # local_path = '/Users/lijian/temp/test/zobj0'
+    # print 'get object: '
+    # print client.getobject(object_id, local_path)
