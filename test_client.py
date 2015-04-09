@@ -99,6 +99,11 @@ if __name__ == '__main__':
     # print 'get object: '
     # print client.getobject(object_id, local_path)
 
+    # print 'get file test:'
+    # des_path = '/rstest.txt'
+    # local_path = '/Users/lijian/temp/test/rstestget.txt'
+    # print client.getfile(des_path, local_path)
+
     # # ---- test crs code ----
     # des_path = './crstest.txt'
     # src_path = '/Users/lijian/temp/test/crstest.txt'
@@ -138,6 +143,11 @@ if __name__ == '__main__':
     # print 'get object: '
     # print client.getobject(object_id, local_path)
 
+    # print 'get file test:'
+    # des_path = '/crstest.txt'
+    # local_path = '/Users/lijian/temp/test/crstestget.txt'
+    # print client.getfile(des_path, local_path)
+
     # # ---- test zcode ----
     # des_path = './ztest.txt'
     # src_path = '/Users/lijian/temp/test/ztest.txt'
@@ -175,3 +185,8 @@ if __name__ == '__main__':
     # local_path = '/Users/lijian/temp/test/zobj0'
     # print 'get object: '
     # print client.getobject(object_id, local_path)
+
+    # print 'get file test:'
+    # des_path = '/ztest.txt'
+    # local_path = '/Users/lijian/temp/test/ztestget.txt'
+    # print client.getfile(des_path, local_path)

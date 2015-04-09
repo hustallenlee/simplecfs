@@ -11,7 +11,7 @@ from simplecfs.message.packet import MakeDirPacket, ListDirPacket,\
     ValidDirPacket, StatusDirPacket, RemoveDirPacket, AddFilePacket,\
     AddChunkPacket, AddFileCommitPacket, StatFilePacket, DeleteFilePacket,\
     DeleteChunkPacket, GetChkPacket, GetChunkPacket, ReportDSPacket,\
-    GetObjPacket
+    GetObjPacket, GetFilePacket
 from simplecfs.coder.driver import RSDriver, CRSDriver, ZDriver
 from simplecfs.message.network_handler import send_command, recv_command,\
     send_data, recv_data
@@ -530,50 +530,15 @@ class Client(object):
         info = recv['info']
         return (state, info)
 
-    def getfile(self, des_path, local_path, repair_flag=False):
-        """get file from @des_path to @local_path,
-        if repair_flag is True, repair missing chunks
-        """
-        logging.info('get file: %s to %s', des_path, local_path)
-        # filename = self._change_to_absolute_path(des_path)
-        state = RET_SUCCESS
-        info = 'ok'
-
-        # TODO
-
-        if state == RET_SUCCESS:
-            info = 'ok'
-        return (state, info)
-
-    def getobject(self, object_id, local_path, repair_flag=False):
-        """get object from @des_path to @local_path,
-        if repair_flag is True, repair missing objects
-        """
-        logging.info('get object: %s to %s', object_id, local_path)
-        state = RET_SUCCESS
-        info = 'ok'
-
-        packet = GetObjPacket(object_id)
-        msg = packet.get_message()
-        sock = self._get_sockfd_to_mds()
-        send_command(sock, msg)
-
-        recv = recv_command(sock)
-        state = recv['state']
-        info = recv['info']
-        if state == RET_FAILURE:
-            logging.error('get object recv from mds: %s', recv)
-            return (state, info)
-
-        # init the code driver
-        driver = self._get_code_driver(info['code'])
+    def _get_object(self, chunks_info, object_id, driver):
+        """get obejct according to chunks_info and driver,
+        return (state, data)"""
         data_chunk_num = driver.get_data_chunk_num()
 
         # check the chunk status
         available_chunk = []
         missing_chunk = []
-        chunks_info = info['chunks']
-        chunk_num = info['chunk_num']
+        chunk_num = len(chunks_info)
         for index in range(chunk_num):
             item_info = chunks_info[index]
             state = item_info['status']
@@ -590,8 +555,7 @@ class Client(object):
         # set the available_chunk and available_list
         if len(available_chunk) < data_chunk_num:
             logging.error('available_chunk less than data chunk num')
-            info = 'available_chunk < data_chunk_num'
-            return (RET_FAILURE, info)
+            return (RET_FAILURE, '')
 
         task = []
         block_num = driver.get_block_num()
@@ -616,6 +580,92 @@ class Client(object):
 
         # decode object
         (state, data) = driver.decode(task_data, block_list)
+        if state == RET_FAILURE:
+            logging.error('decode error')
+            return (RET_FAILURE, '')
+
+        return (state, data)
+
+    def getfile(self, des_path, local_path, repair_flag=False):
+        """get file from @des_path to @local_path,
+        if repair_flag is True, repair missing chunks
+        """
+        logging.info('get file: %s to %s', des_path, local_path)
+        state = RET_SUCCESS
+        info = 'ok'
+
+        filename = self._change_to_absolute_path(des_path)
+        packet = GetFilePacket(filename)
+        msg = packet.get_message()
+
+        sock = self._get_sockfd_to_mds()
+        logging.info('get file send to mds: %s', msg)
+        send_command(sock, msg)
+
+        recv = recv_command(sock)
+        sock.close()
+        state = recv['state']
+        info = recv['info']
+
+        # check the file info
+        if state == RET_FAILURE:
+            logging.error('get file recv from mds: %s', recv)
+            return (state, info)
+
+        # init the code driver
+        driver = self._get_code_driver(info['code'])
+
+        # get each object and write to file
+        data_need_len = info['filesize']
+        object_num = info['object_num']
+        fd = open(local_path, 'w')
+        for obj_idx in range(object_num):
+            object_id = '%s_obj%d' % (filename, obj_idx)
+            chunks_info = info['objects'][obj_idx]
+            (state, data) = self._get_object(chunks_info, object_id, driver)
+            if state == RET_FAILURE:
+                logging.error('get object %s error', object_id)
+                info = 'get object error'
+                break
+            data_len = len(data)
+            if data_len > data_need_len:
+                data_len = data_need_len
+                data = data[:data_need_len]
+            data_need_len -= data_len
+            fd.write(data)
+
+        # write file
+        fd.close()
+
+        if state == RET_SUCCESS:
+            info = 'ok'
+        return (state, info)
+
+    def getobject(self, object_id, local_path, repair_flag=False):
+        """get object from @des_path to @local_path,
+        if repair_flag is True, repair missing objects
+        """
+        logging.info('get object: %s to %s', object_id, local_path)
+        state = RET_SUCCESS
+        info = 'ok'
+
+        packet = GetObjPacket(object_id)
+        msg = packet.get_message()
+        sock = self._get_sockfd_to_mds()
+        send_command(sock, msg)
+
+        recv = recv_command(sock)
+        sock.close()
+        state = recv['state']
+        info = recv['info']
+        if state == RET_FAILURE:
+            logging.error('get object recv from mds: %s', recv)
+            return (state, info)
+
+        # init the code driver
+        driver = self._get_code_driver(info['code'])
+        chunks_info = info['chunks']
+        (state, data) = self._get_object(chunks_info, object_id, driver)
         if state == RET_FAILURE:
             logging.error('decode error')
             info = 'decode error'
@@ -780,6 +830,7 @@ class Client(object):
         recv = recv_command(sock)
         state = recv['state']
         info = recv['info']
+        sock.close()
         if state == RET_FAILURE:
             logging.error('get chunk recv from mds: %s', recv)
             return (state, info)
@@ -826,6 +877,7 @@ class Client(object):
         recv = recv_command(sock)
         state = recv['state']
         info = recv['info']
+        sock.close()
         if state == RET_FAILURE:
             logging.error('get chunk recv from mds: %s', recv)
             return (ds_ip, ds_port)
