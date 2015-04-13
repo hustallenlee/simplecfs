@@ -8,7 +8,8 @@ import ConfigParser as configparser
 import logging
 import logging.handlers
 import eventlet
-
+import sys
+sys.path.append('../')
 from simplecfs.common.parameters import CODE_RS, DS_CONNECTED, DS_BROKEN # NOQA
 from simplecfs.message.packet import MakeDirPacket, RemoveDirPacket,\
     ListDirPacket, StatusDirPacket, ValidDirPacket, AddDSPacket,\
@@ -29,7 +30,7 @@ def init():
     parser.add_argument('-c', '--config',
                         metavar='CONFIG_FILE',
                         help='clientconfig file',
-                        default='./conf/client.cfg')
+                        default='../conf/client.cfg')
     args = parser.parse_args()
     config_file = args.config
 

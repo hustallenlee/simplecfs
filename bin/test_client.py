@@ -6,6 +6,8 @@ use Client for test
 import argparse
 import ConfigParser as configparser
 
+import sys
+sys.path.append('../')
 from simplecfs.client.api import Client
 from simplecfs.common.parameters import CODE_RS, CODE_CRS, CODE_Z  # NOQA
 from simplecfs.common.parameters import DS_BROKEN, DS_CONNECTED  # NOQA
@@ -18,7 +20,7 @@ def init():
     parser.add_argument('-c', '--config',
                         metavar='CONFIG_FILE',
                         help='clientconfig file',
-                        default='./conf/client.cfg')
+                        default='../conf/client.cfg')
     args = parser.parse_args()
     config_file = args.config
 
