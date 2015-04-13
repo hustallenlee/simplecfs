@@ -43,6 +43,7 @@ def init_ds():
     config = configparser.ConfigParser()
     config.read(DS_CONFIG_FILE)
     config.set('mds', 'mds_port', MDS_PORT)
+    config.set('storage', 'chunk_store_dir', './bin/storage/')
     for port in DS_PORT:
         config.set('dataserver', 'ds_port', port)
         ds = DSServer(config)

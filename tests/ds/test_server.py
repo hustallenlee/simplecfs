@@ -45,6 +45,7 @@ def test_ds():
     # get config options
     config = configparser.ConfigParser()
     config.read(DS_CONFIG_FILE)
+    config.set('storage', 'chunk_store_dir', './bin/storage/')
 
     # start server
     ds_ = DSServer(config, test=True)

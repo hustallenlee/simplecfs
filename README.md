@@ -26,6 +26,8 @@ a simple coded file system.
 
 ## Run
 
+change directory to `bin`
+
 ### MDS
 
     redis-server # start the redis-server

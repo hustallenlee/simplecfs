@@ -13,12 +13,12 @@ class TestDSStore(object):
     """class to test DSStore"""
     def setup(self):
         data = 'data write into file!'
-        ds1 = DSStore()
+        ds1 = DSStore('./bin/storage/')
         ret = ds1.write_chunk('test_chunk', data)
         eq_(ret, RET_SUCCESS)
 
     def teardown(self):
-        ds1 = DSStore()
+        ds1 = DSStore('./bin/storage/')
         ret = ds1.remove_chunk('test_chunk')
         eq_(ret, RET_SUCCESS)
 
@@ -45,7 +45,7 @@ class TestDSStore(object):
         # correct remove test in teardown
 
         # incorret remove
-        ds1 = DSStore()
+        ds1 = DSStore('./bin/storage/')
         ret = ds1.remove_chunk('nosuchchunk')
         eq_(ret, RET_FAILURE)
 
@@ -54,7 +54,7 @@ class TestDSStore(object):
         eq_(ret, RET_FAILURE)
 
     def test_info_chunk(self):
-        ds1 = DSStore()
+        ds1 = DSStore('./bin/storage/')
         ret = ds1.info_chunk('test_chunk')
         eq_(ret['state'], CHUNK_OK)
         eq_(ret['size'], 21)
@@ -65,7 +65,7 @@ class TestDSStore(object):
         assert ret['size'] < 0
 
     def test_read_chunk(self):
-        ds1 = DSStore()
+        ds1 = DSStore('./bin/storage/')
         ret = ds1.read_chunk('test_chunk', 3, [0, 1])
         eq_(ret[0], RET_SUCCESS)
         eq_(ret[1], ['data wr', 'ite int'])
@@ -82,7 +82,7 @@ class TestDSStore(object):
         eq_(ret[0], RET_FAILURE)
 
     def test_file_size(self):
-        ds1 = DSStore()
+        ds1 = DSStore('./bin/storage/')
         ret = ds1._file_size('test_chunk')
         eq_(ret, 21)
 
