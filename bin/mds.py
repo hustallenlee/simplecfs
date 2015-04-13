@@ -1,24 +1,26 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-start the dataserver as a service
+start the mds as a service
 """
 import argparse
 import ConfigParser as configparser
 import logging
 import logging.handlers
 
-from simplecfs.ds.server import DSServer
+import sys
+sys.path.append('../')
+from simplecfs.mds.server import MDSServer
 
 
 def main():
-    """run the dataserver main function"""
+    """run the mds main function"""
     # handle command line argument
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config',
                         metavar='CONFIG_FILE',
-                        help='dataserver config file',
-                        default='./conf/ds.cfg')
+                        help='mds config file',
+                        default='../conf/mds.cfg')
     args = parser.parse_args()
     config_file = args.config
 
@@ -44,8 +46,8 @@ def main():
     logger.addHandler(handler)
 
     # start server
-    ds_ = DSServer(config)
-    ds_.start()
+    mds = MDSServer(config)
+    mds.start()
 
 if __name__ == '__main__':
     main()
