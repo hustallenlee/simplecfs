@@ -4,7 +4,6 @@ unit test for mds
 """
 import ConfigParser as configparser
 import logging
-import logging.handlers
 import eventlet
 from nose.tools import eq_
 

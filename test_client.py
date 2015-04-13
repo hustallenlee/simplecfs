@@ -73,8 +73,6 @@ if __name__ == '__main__':
     # print client.putfile(src_path, des_path, code_info)
     # print 'statfile: '
     # print client.statfile(des_path)
-    # print 'delfile:'
-    # print client.delfile(des_path)
 
     # chunk_id = '/rstest.txt_obj0_chk0'
     # local_path = '/Users/lijian/temp/test/rschk0'
@@ -90,8 +88,6 @@ if __name__ == '__main__':
     # print client.getchunk(chunk_id, degrade_path)
     # print 'report ds:'
     # print client.report_ds(ip, port, DS_CONNECTED)
-    # print 'delfile:'
-    # print client.delfile(des_path)
 
     # print 'get object test'
     # object_id = '/rstest.txt_obj0'
@@ -103,6 +99,9 @@ if __name__ == '__main__':
     # des_path = '/rstest.txt'
     # local_path = '/Users/lijian/temp/test/rstestget.txt'
     # print client.getfile(des_path, local_path)
+
+    # print 'delfile:'
+    # print client.delfile(des_path)
 
     # # ---- test crs code ----
     # des_path = './crstest.txt'

@@ -7,7 +7,7 @@ build:
 	cd ext/redis;make
 
 test:
-	@cd ext/redis/src;./redis-server > /dev/null &
+	@cd ext/redis/src; rm dump.rdb;./redis-server > /dev/null &
 	python setup.py test
 	@pkill redis-server
 

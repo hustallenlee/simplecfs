@@ -5,7 +5,6 @@ unit test for ds
 """
 import ConfigParser as configparser
 import logging
-import logging.handlers
 import os
 
 import eventlet
