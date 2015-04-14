@@ -250,6 +250,10 @@ class MDSStore(object):
 
         key = file_key(filename)
         ret = self.set(key, fileinfo)
+
+        parent = ''.join(filename.rpartition('/')[0:2])  # get the parent
+        ret = self.addsub(parent, filename)
+
         return ret
 
     def hasfile(self, filename):
@@ -261,7 +265,10 @@ class MDSStore(object):
         key = file_key(filename)
         self.delete(key)
 
-        return True
+        parent = ''.join(filename.rpartition('/')[0:2])  # get the parent
+        ret = self.delsub(parent, filename)
+
+        return ret
 
     def getfile(self, filename):
         logging.info('meta getfile: file %s', filename)

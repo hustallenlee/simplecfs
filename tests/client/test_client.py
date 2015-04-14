@@ -115,7 +115,7 @@ def get_tmpfile(data_length):
 
 
 def rs(client):
-    des_path = './rstest.txt'
+    des_path = '/rstest.txt'
     src_length = 2048
     src_path = get_tmpfile(src_length)
     src_data = open(src_path, 'r').read()
@@ -132,6 +132,9 @@ def rs(client):
     eq_(ret[0], True)
     ret = client.statfile(des_path)
     eq_(ret[0], True)
+    ret = client.listdir('/')
+    eq_(ret[0], True)
+    eq_(des_path in ret[1], True)
 
     # normal read chunk
     chunk_id = '/rstest.txt_obj0_chk0'
@@ -179,7 +182,7 @@ def rs(client):
 
 
 def crs(client):
-    des_path = './crstest.txt'
+    des_path = '/crstest.txt'
     src_length = 16384
     src_path = get_tmpfile(src_length)
     src_data = open(src_path, 'r').read()
@@ -197,6 +200,9 @@ def crs(client):
     eq_(ret[0], True)
     ret = client.statfile(des_path)
     eq_(ret[0], True)
+    ret = client.listdir('/')
+    eq_(ret[0], True)
+    eq_(des_path in ret[1], True)
 
     # normal read chunk
     chunk_id = '/crstest.txt_obj0_chk0'
@@ -244,7 +250,7 @@ def crs(client):
 
 
 def z(client):
-    des_path = './ztest.txt'
+    des_path = '/ztest.txt'
     src_length = 4096
     src_path = get_tmpfile(src_length)
     src_data = open(src_path, 'r').read()
@@ -261,6 +267,9 @@ def z(client):
     eq_(ret[0], True)
     ret = client.statfile(des_path)
     eq_(ret[0], True)
+    ret = client.listdir('/')
+    eq_(ret[0], True)
+    eq_(des_path in ret[1], True)
 
     # normal read chunk
     chunk_id = '/ztest.txt_obj0_chk0'
