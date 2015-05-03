@@ -16,6 +16,10 @@ CODE_Z = 'ZCODE'
 
 # ==== DS defined parameters ====
 
+# ds type
+DS_LOCAL = 'local'
+DS_MEMORY = 'memory'
+
 # ds state
 DS_CONNECTED = 'OK'
 DS_BROKEN = 'FAILED'

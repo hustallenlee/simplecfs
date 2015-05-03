@@ -8,10 +8,11 @@ import logging
 import socket
 
 from simplecfs.ds.local_storage import DSStore
+from simplecfs.ds.memory_storage import MemStore
 from simplecfs.message.packet import AddChunkReplyPacket,\
     DeleteChunkReplyPacket, GetChunkReplyPacket, AddDSPacket
 from simplecfs.common.parameters import OP_ADD_CHUNK, OP_DELETE_CHUNK,\
-    OP_GET_CHUNK, RET_FAILURE
+    OP_GET_CHUNK, RET_FAILURE, DS_LOCAL, DS_MEMORY
 from simplecfs.message.network_handler import recv_command,\
     recv_data, send_command, send_data
 
@@ -32,7 +33,13 @@ class DSServer(object):
 
         store_dir = config.get('storage', 'chunk_store_dir')
         logging.info('get store dir: %s', store_dir)
-        self._ds = DSStore(store_dir)
+        store_type = config.get('storage', 'type')
+        if store_type == DS_LOCAL:
+            self._ds = DSStore(store_dir)
+        elif store_type == DS_MEMORY:
+            self._ds = MemStore(store_dir)
+        else:
+            self._ds = DSStore(store_dir)
 
         # register to mds when not in testmode
         if not test:
