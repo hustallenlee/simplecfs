@@ -84,6 +84,7 @@ if __name__ == '__main__':
     client = init()
     # size_num = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
     size_num = [1, 2]  # test 1M, 2M file
+    print 'crs:'
     print '%s %s %s %s' % ('filesize', 'putfile(ms)',
                            'getchunk(ms)', 'get_degraded_chunk(ms)')
     for each_num in size_num:
