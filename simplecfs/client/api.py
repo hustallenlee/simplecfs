@@ -814,7 +814,8 @@ class Client(object):
 
         return data
 
-    def getchunk(self, chunk_id, local_path, repair_flag=False):
+    def getchunk(self, chunk_id, local_path, repair_flag=False,
+                 test_flag=False):
         """get chunk from @des_path to @local_path,
         if repair_flag is True, repair missing chunks
         """
@@ -856,9 +857,10 @@ class Client(object):
             info = 'get chunk from ds error'
             state == RET_FAILURE
         else:
-            fd = open(local_path, 'w')
-            fd.write(data)
-            fd.close()
+            if not test_flag:
+                fd = open(local_path, 'w')
+                fd.write(data)
+                fd.close()
 
         if state == RET_SUCCESS:
             info = 'ok'
