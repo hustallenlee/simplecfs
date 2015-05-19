@@ -12,3 +12,13 @@ test:
 	@pkill redis-server
 
 all: build
+
+.PHONY:clean
+
+clean:
+	# gf-complete
+	cd ext/gf-complete;make clean
+	# 编译librlc
+	cd ext/librlc;make clean
+	# 编译redis
+	cd ext/redis;make clean

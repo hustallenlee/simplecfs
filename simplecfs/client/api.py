@@ -586,7 +586,7 @@ class Client(object):
 
         return (state, data)
 
-    def getfile(self, des_path, local_path, repair_flag=False):
+    def getfile(self, des_path, local_path, repair_flag=False, test_flag=False):
         """get file from @des_path to @local_path,
         if repair_flag is True, repair missing chunks
         """
@@ -632,7 +632,9 @@ class Client(object):
                 data_len = data_need_len
                 data = data[:data_need_len]
             data_need_len -= data_len
-            fd.write(data)
+
+            if not test_flag:
+                fd.write(data)
 
         # write file
         fd.close()
@@ -814,7 +816,8 @@ class Client(object):
 
         return data
 
-    def getchunk(self, chunk_id, local_path, repair_flag=False):
+    def getchunk(self, chunk_id, local_path, repair_flag=False,
+                 test_flag=False):
         """get chunk from @des_path to @local_path,
         if repair_flag is True, repair missing chunks
         """
@@ -856,9 +859,10 @@ class Client(object):
             info = 'get chunk from ds error'
             state == RET_FAILURE
         else:
-            fd = open(local_path, 'w')
-            fd.write(data)
-            fd.close()
+            if not test_flag:
+                fd = open(local_path, 'w')
+                fd.write(data)
+                fd.close()
 
         if state == RET_SUCCESS:
             info = 'ok'
