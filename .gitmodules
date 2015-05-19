@@ -1,9 +1,0 @@
-[submodule "ext/librlc"]
-	path = ext/librlc
-	url = http://192.168.0.19/hustlijian/librlc.git
-[submodule "ext/gf-complete"]
-	path = ext/gf-complete
-	url = http://192.168.0.19/hustlijian/gf-complete.git
-[submodule "ext/redis"]
-	path = ext/redis
-	url = http://192.168.0.19/hustlijian/redis.git
