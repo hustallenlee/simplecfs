@@ -1,22 +1,27 @@
-## SimpleCFS
+# SimpleCFS
 
-a simple coded file system.
+A Simple Coded File System, write in python.
 
-## Dependence
+# Dependence
 
-1. gf\_complete
-2. librlc
-3. nose
-4. eventlet
-5. greenlet
-6. redis
+1. python-dev
+2. python 2.7
+3. gcc -msse -msse2 flag
+
+# Tested OS
+
+1. Mac OSX
+2. Ubuntu 12.04+
+
+# Use
 
 ## Install
     
-    git clone --recursive http://192.168.0.19/hustlijian/simplecfs.git
+    git clone http://github.com/hustlijian/simplecfs.git
     cd simplecfs  # change directory to simplecfs
 
     sudo pip install -r requirements.txt
+    sudo apt-get install python-dev # yum install python-devel
     
     make
 
