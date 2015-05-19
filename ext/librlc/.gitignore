@@ -1,0 +1,11 @@
+.svn/
+tags
+cscope.*
+*.o
+*.a
+*.so
+*.test
+*.tar.gz
+*.swp
+.DS_Store
+.ropeproject/
