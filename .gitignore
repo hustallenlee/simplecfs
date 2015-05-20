@@ -36,10 +36,5 @@ nbproject/
 htmlcov/
 .tox/
 
-# From virtualenv.
-include/
-lib/
-/bootstrap.py
-
 # From python-mode
 .ropeproject
