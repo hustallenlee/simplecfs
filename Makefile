@@ -4,7 +4,7 @@ build:
 	# 编译librlc
 	cd ext/librlc;make clean; make
 	# 编译redis
-	cd ext/redis;make clean; make
+	cd ext/redis;make clean; make MALLOC=libc
 
 test:
 	@cd ext/redis/src; rm dump.rdb;./redis-server > /dev/null &
