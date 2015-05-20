@@ -20,7 +20,7 @@ A Simple Coded File System, write in python.
     git clone http://github.com/hustlijian/simplecfs.git
     cd simplecfs  # change directory to simplecfs
 
-    sudo apt-get install -y automake python-dev libtool autoconf
+    sudo apt-get install -y automake libtool autoconf python-dev python-pip
     sudo pip install -r requirements.txt
     
     make
