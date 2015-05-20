@@ -31,8 +31,6 @@ A Simple Coded File System, write in python.
 
 ## Run
 
-change directory to `bin`
-
 ### MDS
 
     redis-server # start the redis-server
